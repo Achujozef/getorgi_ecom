@@ -1,0 +1,27 @@
+{% extends "admin_dash.html" %}
+
+{% load static %}
+{% block active9 %} "active" {% endblock%}
+{% block tablewrapper %}
+                    
+    <div class="col-sm-6">
+        <h2>Coupon</h2>
+    </div>
+    <div class="col-sm-6"></div>
+                    
+{% endblock %}
+
+{% block tablecontent%}
+<body style="background-color: #111; color: #fff;">           
+    <form method="post" enctype="multipart/form-data" style="width:500px; margin-left:200px; margin-top:0px; margin-bottom:100px;">
+        {% csrf_token %}
+        {% for field in fm %}
+            <div class="form-group">
+                <label for="{{ field.id_for_label }}" style="font-size:16px">{{ field.label }}</label>
+                {{ field }}
+            </div>
+        {% endfor %}
+        <button type="submit" class="btn btn-primary btn-block" style="margin-top:30px; font-size:18px;">Add Coupon</button>
+    </form>
+</body>               
+{% endblock %}

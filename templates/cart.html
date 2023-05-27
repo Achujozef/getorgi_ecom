@@ -1,0 +1,176 @@
+{% extends 'theme.html' %}
+{% block content %}
+<div class="container py-5">
+  <h1 class="text-center mb-5">Checkout</h1>
+  <div class="table-responsive">
+    <table class="table">
+      <thead>
+        <tr>
+          <th scope="col">Product</th>
+          <th scope="col">Price</th>
+          <th scope="col">Variant</th>
+          <th scope="col">Quantity</th>
+          <th scope="col">Total</th>
+          <th scope="col">Remove</th>
+        </tr>
+      </thead>
+      <tbody id="cart-items">
+        {% for item in cart_items %}
+        <tr>
+          <td>
+            {% if item.product.images.all %}
+            {% with item.product.images.all|first as img %}
+            <img src="{{ img.image.url }}" alt="Image" class="img-fluid" style="max-width: 100px;">
+            <h2 class="h5 text-black item-name">{{ item.product }}</h2>
+            {% endwith %}
+            {% endif %}
+            <p style="color:red">Stock {{ item.variant.stock }}</p>
+          </td>
+          <td class="item-price">₹{{ item.variant.price }}</td>
+          <td>{{ item.variant.variant }}</td>
+          <td>
+            <div class="input-group mb-3" style="max-width: 120px;">
+              <button class="btn btn-outline-primary js-btn-minus minus-cart" pid="{{ item.variant.id }}" type="button">&minus;</button>
+              <input
+                data-variant-id="{{ item.variant.id }}"
+                data-stock="{{ item.variant.stock }}"
+                type="number"
+                class="form-control text-center quantity-input"
+                value="{{ item.quantity }}"
+                placeholder=""
+                aria-label="Example text with button addon"
+                aria-describedby="button-addon1"
+              >
+              <button class="btn btn-outline-primary js-btn-plus plus-cart" pid="{{ item.variant.id }}" type="button">&plus;</button>
+            </div>
+          </td>
+          <td id="subtotal-{{ item.variant.id }}">₹{{ item.subtotal }}</td>
+          <td>
+            <a style="color:red" href="{% url 'remove_variant_from_cart' item.variant.id %}">
+              <i class="fas fa-trash-alt"></i>
+            </a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="row justify-content-end">
+    <div class="col-md-7">
+      <div class="row">
+        <div class="col-md-12 text-right border-bottom mb-5">
+          <h3 class="text-black h4 text-uppercase">Cart Totals</h3>
+        </div>
+      </div>
+      <div class="row mb-3">
+        <div class="col-md-6">
+          <span class="text-black">Total Quantity</span>
+        </div>
+        <div class="col-md-6 text-right">
+          <strong class="text-black" id="quantityajax">{{ total_quantity }}</strong>
+        </div>
+      </div>
+      <div class="row mb-5">
+        <div class="col-md-6">
+          <span class="text-black">Total Price</span>
+        </div>
+        <div class="col-md-6 text-right">
+          <strong class="text-black" id="totalajax">₹ {{ total_price }}</strong>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-12">
+          <button class="btn btn-success btn-lg py-3 btn-block" onclick="window.location='{% url 'checkout' %}'">Proceed To Checkout</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $(document).ready(function() {
+      // Event listener for minus button
+      $('.minus-cart').click(function() {
+        var variantId = $(this).attr('pid');
+        var quantityInput = $(this).siblings('.quantity-input');
+        var newQuantity = parseInt(quantityInput.val()) - 1;
+  
+        // Make AJAX request
+        $.ajax({
+          url: '{% url "decrement_quantity" 0 %}'.replace('0', variantId),
+          type: 'GET',
+          data: {
+            quantity: newQuantity
+          },
+          success: function(response) {
+            // Update quantity in the input field
+            quantityInput.val(newQuantity);
+            // Update subtotal and cart totals
+            updateSubtotalAndTotals(variantId);
+          },
+          error: function(error) {
+            console.log(error);
+          }
+        });
+      });
+  
+      // Event listener for plus button
+      $('.plus-cart').click(function() {
+        var variantId = $(this).attr('pid');
+        var quantityInput = $(this).siblings('.quantity-input');
+        var stock = parseInt(quantityInput.data('stock'));
+        var currentQuantity = parseInt(quantityInput.val());
+  
+        if (currentQuantity < stock) {
+          var newQuantity = currentQuantity + 1;
+  
+          // Make AJAX request
+          $.ajax({
+            url: '{% url "increment_quantity" 0 %}'.replace('0', variantId),
+            type: 'GET',
+            data: {
+              quantity: newQuantity
+            },
+            success: function(response) {
+              // Update quantity in the input field
+              quantityInput.val(newQuantity);
+              // Update subtotal and cart totals
+              updateSubtotalAndTotals(variantId);
+            },
+            error: function(error) {
+              console.log(error);
+            }
+          });
+        }
+      });
+  
+      // Function to update subtotal and cart totals
+      function updateSubtotalAndTotals(variantId) {
+        // Make AJAX request to update the subtotal and cart totals
+        $.ajax({
+          url: '{% url "update_subtotal_and_totals" 0 %}'.replace('0', variantId),
+          type: 'GET',
+          success: function(response) {
+            // Update the subtotal in the UI
+            var subtotalElement = $('#subtotal-' + variantId);
+            subtotalElement.text('₹' + response.subtotal);
+  
+            // Update the total quantity in the UI
+            var totalQuantityElement = $('#total-quantity');
+            totalQuantityElement.text(response.total_quantity);
+  
+            // Update the total price in the UI
+            var totalPriceElement = $('#total-price');
+            totalPriceElement.text('₹' + response.total_price);
+          },
+          error: function(error) {
+            console.log(error);
+          }
+        });
+      }
+    });
+  </script>
+  
+{% endblock %}

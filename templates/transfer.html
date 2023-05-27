@@ -1,0 +1,29 @@
+{% extends 'theme.html' %}
+
+{% block content %}
+<div class="container">
+  <div class="row justify-content-center">
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">Transfer</h3>
+        </div>
+        <div class="card-body">
+          <form method="post" action="{% url 'transfer' %}">
+            {% csrf_token %}
+            <div class="mb-3">
+              <label for="amount" class="form-label">Amount:</label>
+              <input type="number" id="amount" name="amount" class="form-control" required>
+            </div>
+            <div class="mb-3">
+              <label for="recipient" class="form-label">Recipient:</label>
+              <input type="text" id="recipient" name="recipient" class="form-control" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Transfer</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

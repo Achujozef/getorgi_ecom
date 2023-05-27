@@ -1,0 +1,232 @@
+{% extends 'admin_dash.html'%}
+{%block content%}
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Get-admin_user</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto|Varela+Round">
+<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+<!DOCTYPE html>
+<html>
+<head>
+
+<!-- ####################################################################################################################### -->
+
+
+<style>
+    body {
+        background-color: #232323;
+    }
+    
+    .container {
+        background-color: #111;
+        padding: 20px;
+        border-radius: 5px;
+        color: #fff;
+        width: fit-content;
+    }
+    
+    .table-title {
+        margin-bottom: 15px;
+    }
+    
+    .table-title h2 {
+        margin: 0;
+        padding: 0;
+        font-size: 28px;
+        color: #fff;
+    }
+    
+    .btn-block {
+        background-color: #dc3545;
+        border-color: #c82333;
+    }
+    
+    .btn-block:hover {
+        background-color: #c82333;
+        border-color: #c82333;
+    }
+    
+    .btn-unblock {
+        background-color: #28a745;
+        border-color: #1e7e34;
+    }
+    
+    .btn-unblock:hover {
+        background-color: #1e7e34;
+        border-color: #1e7e34;
+    }
+    
+    .pagination {
+        justify-content: center;
+    }
+    
+    /* Update the text color for table headers */
+    thead th {
+        color: #fff;
+    }
+    
+    .hint-text {
+        color: #fff;
+    }
+    
+    .pagination li a {
+        color: #000;
+    }
+    
+    .pagination li.active a {
+        background-color: #000;
+        border-color: #000;
+        color: #fff;
+    }
+    
+    .pagination li.disabled a {
+        pointer-events: none;
+        cursor: default;
+        opacity: 0.5;
+    }
+    
+    thead th {
+        color: #fff;
+    }
+    
+    tbody td {
+        color: #fff;
+        background-color: transparent !important;
+    }
+    
+   
+</style>
+
+<body>
+    <div class="container">
+        <div class="table-title">
+            <div class="row">
+                <div class="col-sm-6">
+                    <h2>Manage <b>User</b></h2>
+                </div>
+            </div>
+        </div>
+        <table class="table  ">
+            <thead>
+                <tr>
+                    <th>User Name</th>
+                    <th>User Email</th>
+                    <th>Phone Number</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for i in users %}
+                <tr>
+                    <td>{{i.uname}}</td>
+                    <td>{{i.uemail}}</td>
+                    <td>{{i.phone}}</td>
+                    <td>
+                        {% if i.uactive %}
+                        <a href="{% url 'userblock' %}?uid={{i.id}}" class="btn btn-block md-sm my-link3"><span style="color:white">Block</span></a>
+                        {% else %}
+                        <a href="{% url 'userblock' %}?uid={{i.id}}" class="btn btn-unblock md-sm my-link4"><span style="color:white">Unblock</span></a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <div class="clearfix d-flex justify-content-center">
+            <div class="hint-text">Showing <b>5</b> out of <b>25</b> entries</div>
+            <ul class="pagination">
+                <li class="page-item disabled"><a href="#">Previous</a></li>
+                <li class="page-item active"><a href="#" class="page-link">1</a></li>
+                <li class="page-item"><a href="#" class="page-link">2</a></li>
+                <li class="page-item"><a href="#" class="page-link">3</a></li>
+                <li class="page-item"><a href="#" class="page-link">4</a></li>
+                <li class="page-item"><a href="#" class="page-link">5</a></li>
+                <li class="page-item"><a href="#" class="page-link">Next</a></li>
+            </ul>
+        </div>
+    </div>
+</body>
+<script>
+    $(document).ready(function(){
+        // Activate tooltip
+        $('[data-toggle="tooltip"]').tooltip();
+        
+        // Select/Deselect checkboxes
+        var checkbox = $('table tbody input[type="checkbox"]');
+        $("#selectAll").click(function(){
+            if(this.checked){
+                checkbox.each(function(){
+                    this.checked = true;                        
+                });
+            } else{
+                checkbox.each(function(){
+                    this.checked = false;                        
+                });
+            } 
+        });
+        checkbox.click(function(){
+            if(!this.checked){
+                $("#selectAll").prop("checked", false);
+            }
+        });
+    });
+    function blockUser(uid) {
+        $.ajax({
+            type: "GET",
+            url: "/userblock/",
+            data: { uid: uid },
+            success: function(response) {
+                location.reload();
+            },
+            error: function(xhr) {
+                alert("Error: " + xhr.responseText);
+            }
+        });
+    }
+</script>
+<script>
+$(function() {
+    var rowsPerPage = 5; // change this to the number of rows you want to display per page
+    var currentPage = 1;
+    var totalRows = $('table tbody tr').length;
+    var totalPages = Math.ceil(totalRows / rowsPerPage);
+    
+    // hide all rows and show the first n rows (based on rowsPerPage)
+    $('table tbody tr').hide();
+    $('table tbody tr').slice(0, rowsPerPage).show();
+    
+    // generate the pagination links
+    for (var i = 1; i <= totalPages; i++) {
+        var activeClass = i === 1 ? 'active' : '';
+        $('.pagination').append('<li class="page-item ' + activeClass + '"><a href="#" class="page-link">' + i + '</a></li>');
+    }
+    
+    // handle click events on pagination links
+    $('.pagination').on('click', 'a', function(event) {
+        event.preventDefault();
+        var page = parseInt($(this).text());
+        if (page !== currentPage) {
+            currentPage = page;
+            var start = (currentPage - 1) * rowsPerPage;
+            var end = start + rowsPerPage;
+            $('table tbody tr').hide();
+            $('table tbody tr').slice(start, end).show();
+            $('.pagination li').removeClass('active');
+            $('.pagination li:nth-child(' + currentPage + ')').addClass('active');
+        }
+    });
+});
+</script>
+</main>
+</html>
+{% endblock %}

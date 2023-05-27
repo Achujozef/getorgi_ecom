@@ -1,0 +1,122 @@
+
+{% extends 'theme.html'%}
+
+{% load static %}
+{% block search %} 
+
+<form class="d-flex rounded-pill" action="">
+  <div class="input-group">
+    <input class="form-control rounded-pill" type="search" placeholder="Search" aria-label="Search" name="prod_id">
+    <button class="btn btn-primary rounded-pill" type="submit">Search</button>
+  </div>
+</form>
+
+<style>
+  {% comment %} .offer-image {
+    position: absolute;
+    top: 0;
+    right: 0;
+    max-width: 50px;
+    max-height: 50px;
+  } {% endcomment %}
+</style>
+{% endblock %}
+
+{% block content %}
+<hr size="3" color="blue" width="100%">
+<br>
+
+
+{% if messages %}
+{% for message in messages %}
+  <div class="alert alert-{{ message.tags }} mt-3">
+    {{ message }}
+  </div>
+{% endfor %}
+{% endif %}
+
+    <div class="site-section">
+      <div class="container">
+
+        <div class="row mb-5">
+          <div class="col-md-9 order-2">
+
+            <div class="row">
+              <div class="col-md-12 mb-5">
+                <div class="float-md-left mb-4"><h2 class="text-black h5">Products</h2></div>
+                <div class="d-flex">                      
+                </div>
+              </div>
+            </div>
+            <div class="row mb-5">
+              {% for i in page_obj %}
+              <div class="col-sm-6 col-lg-3 mb-4" data-aos="fade-up">
+                <div class="block-4 text-center" style="height: 250px; width: 200px;" data-aos="fade-up">
+                  <a href="{% url 'shopsingle' %}?uid={{i.id}}">
+                    {% if i.images.all %}
+                    {% with i.images.all|first as img %}
+                    <div class="position-relative">
+                      <img class="img-fluid w-100" src="{{ img.image.url }}" alt="{{ product.name }}">
+                      {% if i.offer_percentage %}
+                      <img style="position: absolute; top: 0; right: 0; height: 50px; width: 50px;" class="offer-image" src="{% static 'img/pngwing.png' %}" alt="Offer Image">
+                      {% endif %}
+                    </div>
+                    {% endwith %}
+                    {% endif %}
+                  </a>
+                 
+                </div>
+                <div class="block-4-text p-3">
+                  <h3><a href="{% url 'shopsingle' %}?uid={{i.id}}">{{i.name}}</a></h3>
+                  
+                </div>
+                <div class="d-flex border-top">
+                  <small class="w-50 text-center border-end py-2">
+                    <a class="text-body" href="{% url 'shopsingle' %}?uid={{i.id}}"><i class="fa fa-eye text-primary me-2"></i>View detail</a>
+                  </small>
+                  <small class="w-50 text-center border-end py-2">
+                    <a type="submit" href="{% url 'wishlist' %}?wish_id={{i.id}}" class="fas fa-heart text-primary me-2"></a>
+                  </small>
+                  
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+          <div class="row" data-aos="fade-up">
+              
+            <div class="col-md-12 text-center">
+              <div class="site-block-27">
+                <ul>
+                  {% if page_obj.has_previous %}
+                  <li><a href="?page={{ page_obj.previous_page_number }}">&lt;</a></li>
+                  {% endif %}
+
+                  <li class="active"><span>{{ page_obj.number }}</span></li>
+                  {% if page_obj.has_next %}
+                  <li><a href="?page={{ page_obj.next_page_number }}">&gt;</a></li>            
+                  {% endif %}
+                </ul>
+              </div>
+            </div>
+          </div>
+          <br>
+          </div>
+         <div class="col-md-3 order-1 mb-5 mb-md-0">
+          {% for i in cat %}
+          <div class="card border-0 rounded-0 mb-4 shadow">
+            <div class="card-body">
+              {% if i.offer_percentage %}
+             <img style="position: absolute; top: 0; right: 0; height: 90px; width: 90px;" src="{% static 'img/catoffer.png' %}" class="offer-image" alt="Offer">
+              {% endif %}
+              <h3 href="{% url 'shop' %}?cat_id={{i.id}}" class="mb-3 h6 text-uppercase text-black">{{i.name}}</h3>
+              <a href="{% url 'shop' %}?cat_id={{i.id}}" class="btn btn-primary">View Products</a> 
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        </div>
+      </div>
+    </div>
+</body>
+</html>
+{% endblock %}

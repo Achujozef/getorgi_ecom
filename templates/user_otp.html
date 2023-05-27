@@ -1,0 +1,30 @@
+{% extends "theme.html" %}
+{%block content%}
+
+<div class="container">
+	<div class="row justify-content-center "> <!-- Added row and justify-content-center classes -->
+		<div class="col-sm-3"> <!-- Added col-sm-6 class to limit the width -->
+			<h2 class="text-center">Enter OTP</h2>
+			<form method="POST" action="{% url 'otp_verify' %}">
+				{% csrf_token %}
+				<div class="form-group">
+					<label for="otp">OTP:</label>
+					<input type="text" id="otp" name="otp" class="form-control" required>
+				</div>
+				<button type="submit" class="btn btn-success btn-block">Verify OTP</button>
+			</form>
+			{% if messages %}
+			<div class="messages">
+				{% for message in messages %}
+				<div class="message{% if message.tags %} {{ message.tags }}{% endif %}">
+					{{ message }}
+				</div>
+				{% endfor %}
+			</div>
+			{% endif %}
+		</div>
+	</div>
+</div>
+
+
+{%endblock%}

@@ -1,0 +1,52 @@
+{% extends "theme.html" %}
+{% load static %}
+{% block content %}
+
+<div class="site-section">
+  <div class="container">
+    <div class="row justify-content-center"> <!-- Center the wishlist items -->
+      <div class="col-md-6">
+        {% for i in wish_items %}
+        
+        <div class="card mb-4">
+          <div class="row no-gutters">
+            <div class="col-md-4">
+              <a href="{% url 'shopsingle' %}?uid={{ i.product.id }}">
+                {% if i.product.images.all %}
+                {% with i.product.images.all|first as img %}
+                <img class="card-img" src="{{ img.image.url }}" alt="{{ i.product.name }}">
+                {% endwith %}
+                {% endif %}
+              </a>
+            </div>
+            <div class="col-md-8">
+              <div class="card-body">
+                <a href="{% url 'shopsingle' %}?uid={{ i.product.id }}">
+                <h5 class="card-title">{{ i.product }}</h5>
+              </a>
+              <a href="{% url 'shopsingle' %}?uid={{ i.product.id }}">
+                <p class="card-text">{{ i.product.description }}</p>
+              </a>
+                <a href="{% url 'wishlistdelete' id=i.id %}" class="btn btn-outline-danger btn-sm">
+                  <i class="fas fa-trash-alt"></i> <!-- Replace with the appropriate delete icon class -->
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-md-6">
+        <!-- Left content -->
+      </div>
+      <div class="col-md-6">
+        <!-- Right content -->
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

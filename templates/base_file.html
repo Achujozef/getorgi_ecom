@@ -1,0 +1,32 @@
+{% extends 'theme.html'%}
+
+ {% block content%}
+
+ 
+    <div class="container">
+        <div class="row">
+            
+            {% for i in products%}
+                <div class="col-md-3">
+                    <div class="card">
+                        <img src="{{i.image}}" class="card-img-top" alt="">
+                        <div class="card-body">
+                        <h5 class="card-title">{{i.name}}</h5>
+                        <h5 class="card-text">{{i.price}}</h5>
+                        <p6 class="card-text">Only {{i.stock}}nos left</p6>
+                        <a href="#" class="btn btn-primary">Add To Cart</a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        
+    </div>
+    <div class=" text-right">
+        
+        
+            
+     </div>
+
+{%endblock%}
+

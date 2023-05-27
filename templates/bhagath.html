@@ -1,0 +1,62 @@
+{% extends "theme.html" %}
+
+{% block content %}
+<div class="product">
+  <div class="product-images">
+    <img id="current-image" src="{{ product.images.first.image.url }}" alt="{{ product.name }}">
+    <div class="icon-container">
+      {% for image in product.images.all|slice:"1" %}
+      <i class="fas fa-circle" data-image-url="{{ image.image.url }}"></i>
+      {% endfor %}
+    </div>
+    <i class="fas fa-chevron-left"></i>
+    <i class="fas fa-chevron-right"></i>
+  </div>
+  <div class="product-details">
+    <h1>{{ product.name }}</h1>
+    <p>{{ product.description }}</p>
+    <p>Price: {{ product.price }}</p>
+  </div>
+</div>
+{% endblock %}
+
+{% block script %}
+<script>
+// Get references to the arrow buttons, image container, and navigation icons
+const prevButton = document.querySelector('.fa-chevron-left');
+const nextButton = document.querySelector('.fa-chevron-right');
+const image = document.querySelector('#current-image');
+const icons = Array.from(document.querySelectorAll('.icon-container i[data-image-url]'));
+
+// Set the initial index to 0 (i.e. the first image)
+let currentIndex = 0;
+
+// Add event listeners to the arrow buttons and navigation icons
+prevButton.addEventListener('click', () => {
+  // Decrement the current index, wrapping around if necessary
+  currentIndex = (currentIndex - 1 + icons.length) % icons.length;
+
+  // Update the image source with the new index
+  const newImageSrc = icons[currentIndex].getAttribute('data-image-url');
+  image.src = newImageSrc;
+});
+
+nextButton.addEventListener('click', () => {
+  // Increment the current index, wrapping around if necessary
+  currentIndex = (currentIndex + 1) % icons.length;
+
+  // Update the image source with the new index
+  const newImageSrc = icons[currentIndex].getAttribute('data-image-url');
+  image.src = newImageSrc;
+});
+
+icons.forEach((icon, index) => {
+  icon.addEventListener('click', () => {
+    // Update the current index and image source with the clicked icon
+    currentIndex = index;
+    const newImageSrc = icon.getAttribute('data-image-url');
+    image.src = newImageSrc;
+  });
+});
+</script>
+{% endblock %}

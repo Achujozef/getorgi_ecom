@@ -1,0 +1,105 @@
+{% extends 'admin_dash.html'%}
+
+{%block content%}
+{% if messages %}
+  <ul class="messages">
+    {% for message in messages %}
+      <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+    {% endfor %}
+  </ul>
+{% endif %}
+  <h1>Categories</h1>
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for category in categories %}
+        <tr>
+          <td>{{ category.name }}</td>
+          <td>
+            <a href="{% url 'edit_category' category.id %}" class="btn btn-primary">Edit</a>
+            <a href="{% url 'delete_category' category.id %}" class="btn btn-danger">Delete</a>
+          </td>
+        </tr>
+      {% empty %}
+        <tr>
+          <td colspan="2">No categories found.</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <a href="{% url 'add_category' %}" class="btn btn-success">Add Category</a>
+{% endblock %}
+
+<style>
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  th {
+    background-color: #e6e6e6;
+    color: #333;
+    font-weight: bold;
+    text-align: left;
+    padding: 8px;
+    border: 1px solid #ccc;
+  }
+  td {
+    padding: 8px;
+    border: 1px solid #ccc;
+  }
+  .btn {
+    display: inline-block;
+    margin-right: 5px;
+    margin-bottom: 5px;
+    padding: 5px 10px;
+    font-size: 14px;
+    font-weight: bold;
+    text-align: center;
+    text-decoration: none;
+    color: #fff;
+    background-color: #007bff;
+    border: 1px solid #007bff;
+    border-radius: 4px;
+  }
+  .btn-primary {
+    background-color: #007bff;
+    border-color: #007bff;
+  }
+  .btn-danger {
+    background-color: #dc3545;
+    border-color: #dc3545;
+  }
+  .btn-success {
+    background-color: #28a745;
+    border-color: #28a745;
+  }
+</style>
+
+
+<div class="category-management">
+  <h2>Category Management</h2>
+  <div class="category-list">
+    <h3>Current Categories</h3>
+    <ul>
+      <li>Category 1</li>
+      <li>Category 2</li>
+      <li>Category 3</li>
+    </ul>
+  </div>
+  <div class="category-form">
+    <h3>Add New Category</h3>
+    <form>
+      <label for="category-name">Name:</label>
+      <input type="text" id="category-name" name="category-name"><br>
+      <label for="category-description">Description:</label>
+      <textarea id="category-description" name="category-description"></textarea><br>
+      <button type="submit">Add Category</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

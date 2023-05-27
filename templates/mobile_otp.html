@@ -1,0 +1,38 @@
+{% extends 'theme.html'%}
+
+{%block content%}
+
+<div class="container mt-5">
+  <div class="row justify-content-center">
+    <div class="col-md-6">
+      <div class="card shadow"> <!-- Added the 'card' and 'shadow' classes -->
+        <div class="card-body">
+          <h2 class="text-center">OTP Login</h2>
+          <hr>
+          {% if messages %}
+            {% for message in messages %}
+              <div class="alert alert-{{ message.tags }} mt-3">
+                {{ message }}
+              </div>
+            {% endfor %}
+          {% endif %}
+          <form method="post" class="mt-4">
+            {% csrf_token %}
+            <div class="form-group">
+              <label for="phone">Enter your Mobile Number:</label>
+              <input type="text" class="form-control" id="phone" name="phone" placeholder="Enter mobile number" required>
+            </div>
+            <button type="submit" class="btn btn-primary mt-3">Get OTP</button>
+            <a type="button" href="{% url 'user_login'%}">/Login with Username</a>
+            <a type="button" href="{% url 'req_singup'%}">/Register</a>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+
+  {% endblock %}

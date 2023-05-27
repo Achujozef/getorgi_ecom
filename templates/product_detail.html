@@ -1,0 +1,273 @@
+
+
+{% extends "theme.html" %}
+{% load static %}
+{% block content %}
+<!-- product_detail.html -->
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ product.name }}</title>    
+</head>
+<body>
+  <div class="container-fluid pb-5 mt-5">
+    <div class="row px-xl-5">
+      <div class="col-md-6 position-relative">
+        <div class="d-flex justify-content-center p-3">
+          <div id="img-container" class="img-cont">
+            <img id="main-image" class="main-image" src="{{ images.0.image.url }}" alt="">
+          </div>
+        </div>
+        <div class="d-flex px-5 justify-content-center">
+          <div class="col-2 d-flex justify-content-center mx-3">
+            <div class="card product-alt-card p-2">
+              <img class="product-alt-images" id="image1" onclick="changeImage(this)" src="{{ images.0.image.url }}" alt="">
+            </div>
+          </div>
+          <div class="col-2 d-flex justify-content-center mx-3">
+            <div class="card product-alt-card p-2">
+              <img class="product-alt-images" id="image2" onclick="changeImage(this)" src="{{ images.1.image.url }}" alt="">
+            </div>
+          </div>
+          <div class="col-2 d-flex justify-content-center mx-3">
+            <div class="card product-alt-card p-2">
+              <img class="product-alt-images" id="image3" onclick="changeImage(this)" src="{{ images.2.image.url }}" alt="">
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div>
+          <p class="product-details-title pt-4 mb-0 fw-bold">{{product.name}}</p>
+        </div>
+        {% comment %} <div class="pt-2 product-details-price fw-bold">
+          <p> Rs {{product.normalprice}}/Nos</p>
+        </div> {% endcomment %}
+        <div>
+          <p>{{product.description}}</p>
+        </div>
+        {% if category_offer_percentage %}
+    <div class="offer-info">
+        <p>Now: {{ category_offer_percentage }}% Off From Actual Price</p>
+    </div>
+{% endif %}
+{% if product.offer_percentage %}
+    <div class="offer-info">
+        <p>Now: {{ product.offer_percentage }}% Off From Actual Price</p>
+    </div>
+{% endif %}
+        {% if variants %}
+          <div class="product-variants">
+            <form method="post" action="{% url 'add_to_cart' %}">
+              {% csrf_token %}
+              <input type="hidden" name="product_id" value="{{ product.id }}">
+              
+              <h3>Variants:</h3>
+              <select name="variant_id">
+                {% for variant in product.productvariant_set.all %}
+                  <option value="{{ variant.id }}">{{ variant.variant }} - Price: {{ variant.price }}</option>
+                {% endfor %}
+              </select>
+              
+              <button type="submit" value="" class="buy-now btn btn-sm btn-primary" onclick="showLoginPopup(event)">Add to Cart</button>
+            </form>
+          </div>
+        {% endif %}
+
+{% comment %}         
+        <form method='post' enctype='multipart/form-data' action="{% url 'add_to_cart'  %}">
+          {% csrf_token %}
+          <input type="hidden" value="{{product.id}}" name="pid">
+          <button type="submit" value="" class="buy-now btn btn-sm btn-primary" onclick="showLoginPopup(event)">Add to Cart</button>
+        </form> {% endcomment %}
+
+        <div class="popup">
+          <p>Please log in to access this feature</p>
+          <button class="login-btn">Log In</button>
+        </div>
+
+        <a type="submit" href="{% url 'wishlist' %}?wish_id={{product.id}}" class="buy-now btn btn-sm btn-outline-primary">Add to Wishlist</a>
+      </div>
+    </div>
+  </div>
+  <hr size="3" color="blue" width="100%">
+<div class="container my-5">
+  <div class="row mx-0 px-2" style="margin-left: -50px; margin-right: -50px;">
+    <div class="col-12">
+      <h4>Related products</h4>
+    </div>
+    <div class="col-12">
+      <div class="row mb-5">
+        {% for i in products_in_same_category %}
+        {% if i != product%}
+        <div class="col-sm-6 col-lg-3 mb-4" data-aos="fade-up">
+          <div class="block-4 text-center" style="height: 250px; width: 200px;" data-aos="fade-up">
+            <a href="{% url 'shopsingle' %}?uid={{i.id}}">
+              {% if i.images.all %}
+              {% with i.images.all|first as img %}
+              <img class="img-fluid w-100" src="{{ img.image.url }}" alt="{{ product.name }}">
+              {% endwith %}
+              {% endif %}
+            </a>
+          </div>
+          <div class="block-4-text p-3">
+            <h3><a href="{% url 'shopsingle' %}?uid={{i.id}}">{{i.name}}</a></h3>
+            <p>₹ {{i.normalprice}}</p>
+          </div>
+          <div class="d-flex border-top">
+            <small class="w-50 text-center border-end py-2">
+              <a class="text-body" href="{% url 'shopsingle' %}?uid={{i.id}}"><i class="fa fa-eye text-primary me-2"></i>View detail</a>
+            </small>
+            <small class="w-50 text-center py-2">
+              <form method='post' enctype='multipart/form-data' action="{% url 'add_to_cart'  %}">
+                {% csrf_token %}
+                <input type="hidden" value="{{i.id}}" name="pid">
+                <button type="submit" value="" class="buy-now btn btn-sm btn-primary" onclick="showLoginPopup(event)">Add to Cart</button>
+              </form>
+            </small>
+          </div>
+        </div>
+        {%endif%}
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+  <script>
+    $(document).ready(function() {
+        $('a[href="{% url 'add_to_cart' %}"]').click(function(e) {
+            e.preventDefault();
+            {% if request.session.username %}
+                // User is logged in, redirect to the cart page
+                window.location.href = "{% url 'add_to_cart' %}";
+            {% else %}
+                // User is not logged in, show login popup
+                var loginPopup = '<div class="modal fade" id="loginModal" tabindex="-1" role="dialog">' +
+                    '<div class="modal-dialog" role="document">' +
+                    '<div class="modal-content">' +
+                    '<div class="modal-header">' +
+                    '<h5 class="modal-title">Login Required</h5>' +
+                    '<button type="button" class="close" data-dismiss="modal" aria-label="Close">' +
+                    '<span aria-hidden="true">&times;</span>' +
+                    '</button>' +
+                    '</div>' +
+                    '<div class="modal-body">' +
+                    '<p>You need to login to access this feature.</p>' +
+                    '</div>' +
+                    '<div class="modal-footer">' +
+                    '<a href="{% url 'user_login' %}" class="btn btn-primary">Login</a>' +
+                    '<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>' +
+                    '</div>' +
+                    '</div>' +
+                    '</div>' +
+                    '</div>';
+                $(loginPopup).modal('show');
+            {% endif %}
+        });
+    });
+</script>
+
+<script>
+  function addToCart() {
+    var variantSelect = document.getElementById("variant-select");
+    var selectedVariant = variantSelect.options[variantSelect.selectedIndex];
+    var variantId = selectedVariant.value;
+    var quantity = document.getElementById("quantity-input").value;
+    var addToCartUrl = selectedVariant.getAttribute("data-add-to-cart-url");
+    var addToCartUrlWithParams = addToCartUrl + "?variant_id=" + variantId + "&quantity=" + quantity;
+    window.location.href = addToCartUrlWithParams;
+  }
+</script>
+
+<script>
+
+  const link1 = document.querySelector('.my-link1');
+  const link2 = document.querySelector('.my-link2');
+
+
+  link1.addEventListener('click', function(event) {
+    event.preventDefault(); // prevent default link behavior
+  
+    if (confirm('You really want to cancel?')) {
+      window.location.href = link1.href; // redirect to link URL
+    }
+  });
+
+  link2.addEventListener('click', function(event) {
+    event.preventDefault(); // prevent default link behavior
+  
+    if (confirm('You really want to return?')) {
+      window.location.href = link2.href; // redirect to link URL
+    }
+  });
+
+
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+ 
+  <script src="https://cdn.jsdelivr.net/npm/js-image-zoom/js-image-zoom.min.js"></script>
+
+<!-- sundara -->
+
+
+<script>
+  const mainimage = document.getElementById("main-image")
+  function changeImage(image) {
+    mainimage.src = image.src
+    new ImageZoom(document.getElementById("img-container"), options);
+  }
+  var options = {
+    width: 300,
+    height: 350,
+    zoomWidth: 300,
+    
+    // required
+    // more options here
+  };
+  new ImageZoom(document.getElementById("img-container"), options);
+</script>
+
+
+
+
+
+  
+
+</body>
+</html>
+
+{% endblock %}

@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Update Order</title>
+	<!-- Link to Bootstrap CSS file -->
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+</head>
+<body style="background-color: #111; color: #fff;">
+	<div class="mx-auto col-sm-12 col-md-10 col-lg-8">
+		<div class="container mt-5">
+	<div class="container">
+		<h1 class="my-4">Update Order</h1>
+		<form method="POST" enctype="multipart/form-data">
+			{% csrf_token %}
+			{{ fm.as_p }}
+			<button type="submit" class="btn btn-primary mt-3">Update</button>
+		</form>
+	</div>
+</div>
+</div>
+	<!-- Link to Bootstrap JS file -->
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+</body>
+</html>

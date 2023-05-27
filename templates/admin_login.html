@@ -1,0 +1,96 @@
+{% extends 'admin_dash.html'%}
+{%block content%}
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title></title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
+    </head>
+    {% comment %} <style>  
+        body {  
+         
+          font-family: 'Muli', sans-serif; 
+        }  
+        h1 {  
+          color: #fff;  
+          padding-bottom: 2rem;  
+          font-weight: bold;  
+        }  
+        a {  
+          color: #333;  
+        }  
+        a:hover {  
+          color: #E8D426;  
+          text-decoration: none;  
+        }  
+        .form-control:focus {  
+            color: #000;  
+             
+            border: 2px solid #E8D426;  
+            outline: 0;  
+            box-shadow: none;  
+        }  
+        .btn {  
+          
+          border: #000000;  
+        }  
+        .btn:hover {  
+          
+          border: #E8D426;  
+        }
+        #inbtn{
+          color: #3C9A02;
+        }
+    </style> {% endcomment %}
+    <body>
+      {% if messages %}
+  <ul class="messages">
+    {% for message in messages %}
+      <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+    {% endfor %}
+  </ul>
+{% endif %}
+       
+          <div class="pt-5">  
+           
+          <div class="container">  
+                          <div class="row">  
+                              <div class="col-md-5 mx-auto">  
+                                  <div class="card card-body">  
+                                <form id="submitForm" action="" method="post" data-parsley-validate="" data-parsley-errors-messages-disabled="true" novalidate="" _lpchecked="1">  
+                                    {% csrf_token %}
+          <input type="hidden" name="_csrf" value="7635eb83-1f95-4b32-8788-abec2724a9a4">  
+                             <div class="form-group required">  
+                        
+                       <input type="text" class="form-control " id="username" required="" name="adusername" value="" placeholder="Username" required>  
+                         </div>                      
+                 <div class="form-group required">  
+                 
+               
+          <input type="password" class="form-control" required="" id="password" name="adpassword" value="" placeholder="Password" required>  
+                 </div>  
+                          
+                        </div>  
+                   <div class="form-group pt-1">  
+                <button class="btn btn-primary btn-block" type="submit"> Log In </button> 
+                
+                            </div>  
+                            {% comment %} <p class="small fw-bold mt-2 pt-1 mb-0">Don't have an account? <a href="{% url 'req_singup' %}"
+                              class="link-primary">Register</a></p> {% endcomment %}
+                         </form>  
+                         {% for message in messages %}
+                         <div class="alert alert-danger">{{ message }}</div>
+                       {% endfor %}
+                                  </div>  
+                              </div>  
+                          </div>  
+                      </div>  
+          </div>    
+    </body>
+</html>
+
+{% endblock %}

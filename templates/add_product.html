@@ -1,0 +1,253 @@
+{% extends 'admin_dash.html' %}
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
+{% block content %}
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <style>
+    body {
+      background-color: #111;
+      color: #fff;
+    }
+
+    .close-button {
+      position: absolute;
+      top: 0;
+      right: 0;
+      color: red;
+      font-size: 24px;
+      cursor: pointer;
+    }
+  </style>
+
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <style>
+    body {
+      background-color: #111;
+      color: #fff;
+    }
+
+    .close-button {
+      position: absolute;
+      top: 0;
+      right: 0;
+      color: red;
+      font-size: 24px;
+      cursor: pointer;
+    }
+
+    .image-preview {
+      display: flex;
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      margin-top: 10px;
+    }
+
+    .image-preview img {
+      width: 200px;
+      height: auto;
+      margin-right: 10px;
+    }
+  </style>
+</head>
+
+<body style="background-color: #111; color: #fff;">
+  {% if messages %}
+  <ul class="messages">
+    {% for message in messages %}
+      <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+    {% endfor %}
+  </ul>
+{% endif %}
+  <div class="container my-5">
+    <div class="row">
+      <div class="col-md-6 mx-auto">
+        <h1 class="text-center text-white">Add Product</h1>
+        <form method="POST" enctype="multipart/form-data">
+          {% csrf_token %}
+          <div class="form-group">
+            <label for="name" class="text-white">Name:</label>
+            <input type="text" class="form-control" id="name" name="name" required>
+          </div>
+          <div class="form-group">
+            <label for="description" class="text-white">Description:</label>
+            <textarea class="form-control" id="description" name="description" required></textarea>
+          </div>
+          <div class="form-group">
+            <label for="category" class="text-white">Category:</label>
+            <select class="form-control" id="category" name="category" required>
+              {% for category in categories %}
+              <option value="{{ category.id }}">{{ category.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="images" class="text-white">Images:</label>
+            <input type="file" class="form-control" id="images" name="images" multiple>
+            <div id="image-preview" class="image-preview"></div>
+          </div>
+
+          <button type="submit" class="btn btn-primary">Add Product</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</body>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+  <script>
+    // Preview selected images
+    document.getElementById('images').addEventListener('change', function (e) {
+      var previewContainer = document.getElementById('image-preview');
+      previewContainer.innerHTML = '';
+      var files = e.target.files;
+      for (var i = 0; i < files.length; i++) {
+        var reader = new FileReader();
+        reader.onload = function (event) {
+          var image = document.createElement('img');
+          image.src = event.target.result;
+          previewContainer.appendChild(image);
+        }
+        reader.readAsDataURL(files[i]);
+      }
+    });
+  </script>
+
+
+</html>
+{% comment %} <script>
+  const input = document.getElementById("images");
+  const previewContainer = document.getElementById("image-preview");
+  const maxWidth = 100;
+  const maxHeight = 100;
+  
+  input.addEventListener("change", function() {
+    const files = this.files;
+    previewContainer.innerHTML = "";
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const reader = new FileReader();
+      reader.addEventListener("load", function() {
+        const image = new Image();
+        image.addEventListener("load", function() {
+          console.log("Image loaded successfully:", image.src);
+          const canvas = document.createElement("canvas");
+          let width = image.width;
+          let height = image.height;
+  
+          if (width > height) {
+            if (width > maxWidth) {
+              height *= maxWidth / width;
+              width = maxWidth;
+            }
+          } else {
+            if (height > maxHeight) {
+              width *= maxHeight / height;
+              height = maxHeight;
+            }
+          }
+  
+          canvas.width = width;
+          canvas.height = height;
+  
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(image, 0, 0, width, height);
+  
+          const previewImageContainer = document.createElement("div");
+          previewImageContainer.classList.add("preview-image-container");
+          const previewImage = new Image();
+          previewImage.addEventListener("load", function() {
+            console.log("Preview image loaded successfully:", previewImage.src);
+            previewImage.classList.add("preview-image");
+            previewImageContainer.appendChild(previewImage);
+            const removeIcon = document.createElement("span");
+            removeIcon.classList.add("remove-icon");
+            removeIcon.innerHTML = "&times;";
+            removeIcon.addEventListener("click", function() {
+              previewImageContainer.remove();
+              const index = Array.from(input.files).indexOf(file);
+              if (index !== -1) {
+                input.files.splice(index, 1);
+              }
+            });
+            previewImageContainer.appendChild(removeIcon);
+            previewContainer.appendChild(previewImageContainer);
+          });
+          previewImage.addEventListener("error", function() {
+            console.error("Error loading preview image:", previewImage.src);
+          });
+          previewImage.src = canvas.toDataURL("image/jpeg");
+        });
+        image.addEventListener("error", function() {
+          console.error("Error loading image:", image.src);
+        });
+        image.src = this.result;
+      });
+      reader.readAsDataURL(file);
+    }
+  });
+</script> {% endcomment %}
+{% endblock %}
+    {% comment %} <div class="form-group">
+      <label for="variants">Variants:</label>
+      <table id="variants-table" class="table table-bordered">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Price</th>
+            <th>Stock</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <input type="text" class="form-control" name="variants-0-name" required>
+            </td>
+            <td>
+              <input type="number" class="form-control" name="variants-0-price" min="0" required>
+            </td>
+            <td>
+              <input type="number" class="form-control" name="variants-0-stock" min="0" required>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <button type="button" id="add-variant-row" class="btn btn-primary">Add Row</button>
+    </div> {% endcomment %}
+    {% comment %} <button type="submit" class="btn btn-primary">Add Product</button>
+  </form> {% endcomment %}
+
+{% comment %} {% block script %}
+<script>
+  $(function() {
+    // Add new row to variants table
+    $('#add-variant-row').on('click', function() {
+      var nextIndex = $('#variants-table tbody tr').length;
+      var rowHtml = `
+        <tr>
+          <td>
+            <input type="text" class="form-control" name="variants-${nextIndex}-name" required>
+          </td>
+          <td>
+            <input type="number" class="form-control" name="variants-${nextIndex}-price" min="0" step="1" required>
+          </td>
+          <td>
+            <input type="number" class="form-control" name="variants-${nextIndex}-stock" min="0" step="1" required>
+          </td>
+          <td>
+            <button type="button" class="btn btn-danger btn-sm remove-variant-row"><i class="fa fa-trash"></i></button>
+          </td>
+        </tr>
+      `;
+      $('#variants-table tbody').append(rowHtml);
+    });
+
+    // Remove row from variants table
+    $(document).on('click', '.remove-variant-row', function() {
+      $(this).closest('tr').remove();
+    });
+  });
+</script>
+{% endcomment %}

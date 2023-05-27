@@ -1,0 +1,19 @@
+
+{% for product in products %}
+<tr>
+    <td>
+        <span class="custom-checkbox">
+            <input type="checkbox" id="{{ product.id }}" name="options[]" value="{{ product.id }}">
+            <label for="{{ product.id }}"></label>
+        </span>
+    </td>
+    <td>{{ product.name }}</td>
+    <td>{{ product.normalprice }}</td>
+    <td>{{ product.stock }}</td>
+    <td>{{ product.image }}</td>
+    <td>
+        <a href="#editProductModal" class="edit" data-toggle="modal" data-product-id="{{ product.id }}"><i class="material-icons" data-toggle="tooltip" title="Edit">&#xE254;</i></a>
+        <a href="#deleteEmployeeModal-{{forloop.counter}}" class="delete" data-toggle="modal"><i class="material-icons" data-toggle="tooltip" title="Delete">&#xE872;</i></a>
+    </td>
+</tr>
+{% endfor %}

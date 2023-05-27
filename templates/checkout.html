@@ -1,0 +1,288 @@
+{% extends 'theme.html'%}
+{% load static %}
+{%block content%}
+<style>
+  .button-row {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+  }
+
+  .button-row .button-container {
+    margin: 0 10px;
+  }
+
+  .button-row .button-container button {
+    width: 100px;
+    height: 50px;
+    font-size: 14px;
+    font-weight: bold;
+    border: none;
+    border-radius: 5px;
+    color: white;
+    cursor: pointer;
+  }
+
+  .button-row .button-container #pay-with-wallet {
+    background-color: #337ab7;
+  }
+
+  .button-row .button-container #cod {
+    background-color: #5cb85c;
+  }
+
+  .button-row .button-container #razorpay {
+    background-color: #5bc0de;
+  }
+</style>
+<div class="container text-center mt-5">
+  <h2 class="h3 mb-3 text-black">Address</h2>
+  <div class="row mb-5 border p-4 rounded">
+    <div class="row mb-5">
+      {% if messages %}
+      <div class="messages">
+        {% for message in messages %}
+        <div class="message{% if message.tags %} {{ message.tags }}{% endif %}">
+          {{ message }}
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+      <div class="row">
+        {% for i in context %}
+        <div class="col-md-4 mb-4">
+          <div class="card h-100">
+            <div class="card-body">
+              <h5 class="card-title">{{i.name}}</h5>
+              <p class="card-text">{{i.housename}}, {{i.city}}, PIN: {{i.zipcode}}</p>
+              <div class="d-flex justify-content-between align-items-center">
+                <div class="btn-group">
+                  <a href="{% url 'updateaddress' id=i.id %}">
+                    <button type="button" class="btn btn-sm btn-outline-secondary">Edit</button>
+                  </a>
+                  <a href="{% url 'deleteaddress' %}?uid={{i.id}}">
+                    <button type="button" class="btn btn-sm btn-outline-secondary">Delete</button>
+                  </a>
+                  {% if i.selected %}
+                  <a href="{% url 'address_select' %}?uid={{i.id}}">
+                    <button type="button" class="btn btn-sm btn-success">Selected</button>
+                  </a>
+                  {% else %}
+                  <a href="{% url 'address_select' %}?uid={{i.id}}">
+                    <button type="button" class="btn btn-sm btn-success">Select</button>
+                  </a>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+
+    <div class="row">
+      <div class="col-md-6 mb-5 mb-md-0">
+        <h2 class="h3 mb-3 text-black">Add New</h2>
+        <form method="post">
+          {% csrf_token %}
+          <div class="p-3 p-lg-5 border">
+            {% for fm in fm %}
+            <div class="form-group row">
+              <div class="col-md-12">
+                {{fm.label_tag}}{{fm}} <small class="text-danger">{{fm.errors|striptags}}</small>
+              </div>
+            </div>
+            {% endfor %}
+            <br>
+            <div class="form-group">
+              <button class="btn  btn-success btn-lg py-3 btn-block" type="submit" name="addressform">Add Address</button>
+            </div>
+          </div>
+        </form>
+      </div>
+
+
+      <div class="col-md-6">
+        <div class="row mb-5">
+          <div class="col-md-12">
+            <h2 class="h3 mb-3 text-black">Coupon Code</h2>
+            <div class="p-3 p-lg-5 border">
+              
+              <label for="c_code" class="text-black mb-3">Enter your coupon code if you have one</label>
+              <form method="post">
+                {% csrf_token %}
+              <div class="input-group w-75">
+                <input type="text" class="form-control" name="c_code" id="c_code" placeholder="Coupon Code" aria-label="Coupon Code" aria-describedby="button-addon2">
+                <div class="input-group-append">
+                  <button class="btn btn-primary btn-sm" type="submit" id="button-addon2" name="couponform">Apply</button>    
+                </div>     
+              </div><br>
+               <a type="button" data-toggle="modal"href="#exampleModalScrollable1">Show all coupons</a> 
+              {% if coup.applied %}
+              <div>
+              <p class="badge badge-info">{{ coup.coupon_code }} <a href="{% url 'cancelcoupon' %}" class="btn btn-danger">X</a></p>    
+              </div>
+
+              {% endif %}
+              
+            </form>
+            </div>
+          </div>
+        </div>
+
+
+
+
+        <div class="col-md-8">
+          <h2 class="h3 mb-3 text-black">Your Order</h2>
+          <div class="p-3 p-lg-5 border">
+            <table class="table site-block-order-table mb-5">
+              <thead>
+                <tr>
+                  <th scope="col">Product</th>
+                  <th scope="col">Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for i in data %}
+                <tr>
+                  <td>{{i.product}} <strong class="mx-2">x</strong> {{i.quantity}}</td>
+                  <td>₹ {{i.get_total_price}}</td> 
+                </tr>
+                {% endfor %}
+                <tr>
+                  <td class="text-black font-weight-bold"><strong>Cart Subtotal</strong></td>
+                  <td class="text-black">₹ {{datap.total}}</td>
+                </tr>
+                {% if coup.applied %}
+                <tr>
+                  <td class="text-black font-weight-bold"><strong>Coupon Discount</strong></td>
+                  <td class="text-black">₹ {{ coup.discount_price }}</td>
+                </tr>
+                {% endif %}
+                <tr>
+                  <td class="text-black font-weight-bold"><strong>Order Total</strong></td>
+                  {% if coup.applied %}
+                  <td class="text-black font-weight-bold"><strong>₹ {{disc}}</strong></td>
+                  {% else %}
+                  <td class="text-black font-weight-bold"><strong>₹ {{datap.total}}</strong></td>
+                  {% endif %}
+                </tr>
+              </tbody>
+            </table>
+            <form action="{% url 'wallet_payment' %}" method="POST">
+              {% csrf_token %}
+        
+              {% if coup.applied %}
+              <input type="hidden" name="amount" value="{{disc}}">
+              {% else %}
+              <input type="hidden" name="amount" value="{{datap.total}}">
+              {% endif %}
+        
+              <!-- Add the wallet payment button -->
+              <div class="button-row">
+                <div class="button-container">
+                  <button id="pay-with-wallet" type="submit" class="btn btn-primary">Pay with Wallet</button>
+                </div>
+              </div>
+            </form>
+        
+            <div class="form-group">
+              <div class="button-row">
+                <div class="button-container">
+                  <button id="cod" class="btn btn-success btn-lg py-3 btn-block" onclick="window.location='{% url 'orderconfirm' %}'"><p5>COD</p5></button>
+                </div>
+              </div>
+            </div>
+        
+            <div class="button-row">
+              <div class="button-container">
+                <div id="razorpay">
+                  <button id="rzp-button1" type="submit" class="btn btn-secondary btn-md py-3 btn-block l-f-o__create-link btn--e-transparent-brand-b-2" style="max-width: 100px;max-height: 50px;" href="">Razorpay</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        </div>
+        </div>
+        </div>
+        </div>
+        
+        <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+        <script>
+          var amount = {% if coup.applied %}'{{disc}}' {% else %}'{{datap.total}}'{% endif %} * 100;
+          var options = {
+            "key": "rzp_test_fe92PDGUR6EoGd", // Enter the Key ID generated from the Dashboard
+            "amount": amount, // Amount is in currency subunits. Default currency is INR. Hence, 50000 refers to 50000 paise
+            "currency": "INR",
+            "name": "Get Orgi", //your business name
+            "description": "Test Transaction",
+            "image": "https://example.com/your_logo",
+            "order_id": "{{payment.id}}",
+            "callback_url": "https://eneqd3r9zrjok.x.pipedream.net/",
+            "prefill": {
+              "name": "Achu Joseph S L", //your customer's name
+              "email": "achujozefsl0709@gmail.com",
+              "contact": "9000090000"
+            },
+            "notes": {
+              "address": "Razorpay Corporate Office"
+            },
+            "theme": {
+              "color": "#3399cc"
+            },
+            "handler": function(response) {
+              // Redirect the user to another page after payment success
+              window.location.href = "{% url 'orderconfirm' %}";
+            }
+          };
+          var rzp1 = new Razorpay(options);
+        
+          document.getElementById('rzp-button1').onclick = function(e) {
+            rzp1.open();
+            e.preventDefault();
+          }
+        </script>
+        <script>
+          var payment_method = "{{ payment_method }}";
+        </script>
+    
+
+    <!-- Coupon Model  -->
+    <div class="modal fade" id="exampleModalScrollable1" tabindex="-1" role="dialog" aria-labelledby="exampleModalScrollableTitle" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-scrollable" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title text-black" id="exampleModalScrollableTitle">Coupons</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <input type="hidden" id="total" value="<%=coupon.length %>" >
+          {% for i in coupon  %}
+            <div class="form-group row">
+              <div class="col-md-12">
+                <span style="color: crimson;font-size:x-large;"><strong id="{{i.id}}">{{i.coupon_code}}</strong></span>
+                <p class="text-black"><b>Details:</b> {{i.description}}</p>
+                <p class="text-black"><b>Min order value:</b> {{ i.minimum_amount }}</p>
+              </div>
+
+              
+
+            
+          </div>
+          <hr>
+          {% endfor %}
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            <!-- <button type="submit" class="btn btn-primary">Save changes</button> -->
+          </div>
+        </div>
+      </div>
+    </div> 
+   </div>
+
+
+    {% endblock %}

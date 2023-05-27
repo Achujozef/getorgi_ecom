@@ -1,0 +1,31 @@
+{% extends 'admin_dash.html' %}
+
+{% block content %}
+<body style="background-color: #111; color: #fff;">
+<div class="container-fluid" style="background-color: #111; color: #fff;">
+  <h2>Edit variants for {{ product.name }}</h2>
+  <form method="post">
+    {% csrf_token %}
+    <table class="table"style="background-color: #111; color: #fff;">
+      <thead>
+        <tr>
+          <th>Variant Name</th>
+          <th>Price</th>
+          <th>Stock</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for variant in variants %}
+          <tr>
+            <td><input type="text" id="{{ variant.id }}_name" name="{{ variant.id }}_name" value="{{ variant.variant }}" class="form-control" required></td>
+            <td><input type="number" id="{{ variant.id }}_price" name="{{ variant.id }}_price" value="{{ variant.price }}" class="form-control" required></td>
+            <td><input type="number" id="{{ variant.id }}_stock" name="{{ variant.id }}_stock" value="{{ variant.stock }}" class="form-control" required></td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <button type="submit" class="btn btn-primary">Save</button>
+  </form>
+</div>
+</body>
+{% endblock %}
