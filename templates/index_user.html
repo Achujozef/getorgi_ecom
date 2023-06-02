@@ -1,122 +1,287 @@
-
-{% extends 'theme.html'%}
+{% extends 'theme.html' %}
 
 {% load static %}
-{% block search %} 
 
-<form class="d-flex rounded-pill" action="">
+{% block search %} 
+<form class="d-flex rounded-pill" action="" id="search-form">
   <div class="input-group">
     <input class="form-control rounded-pill" type="search" placeholder="Search" aria-label="Search" name="prod_id">
     <button class="btn btn-primary rounded-pill" type="submit">Search</button>
   </div>
 </form>
-
-<style>
-  {% comment %} .offer-image {
-    position: absolute;
-    top: 0;
-    right: 0;
-    max-width: 50px;
-    max-height: 50px;
-  } {% endcomment %}
-</style>
 {% endblock %}
 
 {% block content %}
-<hr size="3" color="blue" width="100%">
+<style>
+  {% comment %} .product-card {
+    height: 300px; /* Adjust the height as desired */
+    width: 200px; /* Adjust the width as desired */
+    margin-right: 20px; /* Add a 20px right margin between cards */
+    margin-left: 10px; /* Add a 10px bottom margin between cards */
+  }
+   {% endcomment %}
+  .product-card .card-img-top {
+    height: 150px; /* Adjust the image height as desired */
+    object-fit: cover; /* Maintain aspect ratio and fill the available space */
+  }
+  
+  .product-card .card-body {
+    height: 150px; /* Adjust the body height as desired */
+    
+  }
+
+  .category-card {
+    border-radius: 30px;
+    padding: 5px 10px;
+    background-color: #f8f8f8;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    text-align: center;
+  }
+  
+  .category-card h3 {
+    margin-top: 10px;
+    font-size: 16px;
+    font-weight: bold;
+  }
+  
+  .category-card img.offer-image {
+    width: 60px;
+    margin-bottom: 10px;
+  }
+  
+  .category-card a.btn-primary {
+    margin-top: 10px;
+    
+  }
+  .product-name {
+    font-size: 20px; /* Adjust the font size as desired */
+    color: black;
+    font-family: "Your Preferred Font", sans-serif; /* Replace "Your Preferred Font" with the desired font name */
+    /* Additional styling properties if needed */
+  }
+  .product-card:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+  .category-card:hover {
+    background-color: #f0f0f0;
+  }
+
+
+  .carousel-control-prev,
+  .carousel-control-next {
+    color: black;
+  }
+  .category-card {
+    max-height: 50px; /* Adjust the maximum height as per your requirement */
+    overflow: hidden;
+  }
+  .category-card {
+    margin-right: 5px; /* Adjust the margin as desired */
+    padding: 0;
+  }
+  
+  .category-card:last-child {
+    margin-right: 0;
+  }
+  .category-card-content {
+    display: flex;
+    
+  }
+  
+  .offer-image {
+    margin-right: 5px;
+  }
+  
+
+</style>
+<div class="container d-flex justify-content-center">
+  <hr class="my-4">
+
+  {% if messages %}
+    <div class="alert alert-dismissible fade show mt-3" role="alert">
+      {% for message in messages %}
+        {{ message }}
+      {% endfor %}
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+  {% endif %}
+
+  <div class="site-section">
+    <div class="container">
+      <br>
 <br>
+<h5 style="font-family: 'Arial', sans-serif;">Select Categories</h5>
 
-
-{% if messages %}
-{% for message in messages %}
-  <div class="alert alert-{{ message.tags }} mt-3">
-    {{ message }}
+<div class="row mb-6">
+  <div class="col-md-12">
+    <div class="row">
+      {% for i in cat %}
+        <div class="col-md-auto mb-4">
+          <div class="card border-0 d-inline-block shadow category-card">
+            <div class="card-body text-nowrap">
+              <div class="category-card-content">
+                {% if i.offer_percentage %}
+                  <img class="offer-image" src="{% static 'img/catoffer.png' %}" alt="Offer">
+                {% endif %}
+                <a style="font-family: 'Arial', sans-serif;" class="mb-3 h6 text-uppercase text-black category-card-link small" href="{% url 'shop' %}?cat_id={{ i.id }}">{{ i.name }}</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
   </div>
-{% endfor %}
-{% endif %}
+</div>
 
-    <div class="site-section">
-      <div class="container">
 
+
+
+
+
+
+<div class="row mb-6 justify-content-center">
+  <div class="col-md-12">
+    <div class="row">
+      <div class="col-md-12 mb-5">
+        <h2 style="font-family: 'Arial', sans-serif;" class="text-black h5">Products</h2>
+      </div>
+    </div>
+    <div class="row mb-5">
+      {% for i in page_obj %}
+      <div class="col-sm-6 col-lg-2 mb-4">
+        <div class="card product-card border-0">
+          {% if i.images.all %}
+            {% with i.images.all|first as img %}
+              <img class="card-img-top rounded" src="{{ img.image.url }}" alt="{{ product.name }}">
+            {% endwith %}
+          {% endif %}
+          
+          <div class="card-body">
+            <h5 class="card-title product-name">
+              <a href="{% url 'shopsingle' %}?uid={{ i.id }}">{{ i.name }}</a>
+            </h5>
+            <span style="font-size: smaller;">Free Delivery</span><br>
+            {% if i.offer_percentage %}
+              <span style="font-size: smaller;">{{ i.offer_percentage }}% Off</span>
+            {%else%}
+            <span style="font-size: smaller;">Check Offer</span>
+            {% endif %}
+           
+            <div class="d-flex justify-content-between">
+              <a href="{% url 'shopsingle' %}?uid={{ i.id }}" class="btn btn-primary">View</a>
+              <a href="{% url 'wishlist' %}?wish_id={{ i.id }}" class="btn btn-outline-primary "><i class="fas fa-heart"></i></a>
+            </div>
+            
+          </div>
+        </div>
+      </div>
+      {% if forloop.counter|divisibleby:6 %}
+        </div>
         <div class="row mb-5">
-          <div class="col-md-9 order-2">
+      {% endif %}
+      {% endfor %}
+    </div>
+  </div>
+</div>
 
-            <div class="row">
-              <div class="col-md-12 mb-5">
-                <div class="float-md-left mb-4"><h2 class="text-black h5">Products</h2></div>
-                <div class="d-flex">                      
-                </div>
-              </div>
-            </div>
-            <div class="row mb-5">
-              {% for i in page_obj %}
-              <div class="col-sm-6 col-lg-3 mb-4" data-aos="fade-up">
-                <div class="block-4 text-center" style="height: 250px; width: 200px;" data-aos="fade-up">
-                  <a href="{% url 'shopsingle' %}?uid={{i.id}}">
-                    {% if i.images.all %}
-                    {% with i.images.all|first as img %}
-                    <div class="position-relative">
-                      <img class="img-fluid w-100" src="{{ img.image.url }}" alt="{{ product.name }}">
-                      {% if i.offer_percentage %}
-                      <img style="position: absolute; top: 0; right: 0; height: 50px; width: 50px;" class="offer-image" src="{% static 'img/pngwing.png' %}" alt="Offer Image">
-                      {% endif %}
-                    </div>
-                    {% endwith %}
-                    {% endif %}
-                  </a>
-                 
-                </div>
-                <div class="block-4-text p-3">
-                  <h3><a href="{% url 'shopsingle' %}?uid={{i.id}}">{{i.name}}</a></h3>
-                  
-                </div>
-                <div class="d-flex border-top">
-                  <small class="w-50 text-center border-end py-2">
-                    <a class="text-body" href="{% url 'shopsingle' %}?uid={{i.id}}"><i class="fa fa-eye text-primary me-2"></i>View detail</a>
-                  </small>
-                  <small class="w-50 text-center border-end py-2">
-                    <a type="submit" href="{% url 'wishlist' %}?wish_id={{i.id}}" class="fas fa-heart text-primary me-2"></a>
-                  </small>
-                  
-                </div>
-              </div>
-              {% endfor %}
-            </div>
           <div class="row" data-aos="fade-up">
-              
             <div class="col-md-12 text-center">
-              <div class="site-block-27">
-                <ul>
+              <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center">
                   {% if page_obj.has_previous %}
-                  <li><a href="?page={{ page_obj.previous_page_number }}">&lt;</a></li>
+                    <li class="page-item"><a class="page-link pagination" href="?page={{ page_obj.previous_page_number }}">&lt;</a></li>
+                  {% else %}
+                    <li class="page-item disabled"><a class="page-link" href="#">&lt;</a></li>
                   {% endif %}
-
-                  <li class="active"><span>{{ page_obj.number }}</span></li>
+                  <li class="page-item active"><a class="page-link" href="#">{{ page_obj.number }}</a></li>
                   {% if page_obj.has_next %}
-                  <li><a href="?page={{ page_obj.next_page_number }}">&gt;</a></li>            
+                    <li class="page-item"><a class="page-link pagination" href="?page={{ page_obj.next_page_number }}">&gt;</a></li>
+                  {% else %}
+                    <li class="page-item disabled"><a class="page-link" href="#">&gt;</a></li>
                   {% endif %}
                 </ul>
-              </div>
+              </nav>
+              
             </div>
           </div>
-          <br>
-          </div>
-         <div class="col-md-3 order-1 mb-5 mb-md-0">
-          {% for i in cat %}
-          <div class="card border-0 rounded-0 mb-4 shadow">
-            <div class="card-body">
-              {% if i.offer_percentage %}
-             <img style="position: absolute; top: 0; right: 0; height: 90px; width: 90px;" src="{% static 'img/catoffer.png' %}" class="offer-image" alt="Offer">
-              {% endif %}
-              <h3 href="{% url 'shop' %}?cat_id={{i.id}}" class="mb-3 h6 text-uppercase text-black">{{i.name}}</h3>
-              <a href="{% url 'shop' %}?cat_id={{i.id}}" class="btn btn-primary">View Products</a> 
-            </div>
-          </div>
-          {% endfor %}
-        </div>
         </div>
       </div>
     </div>
-</body>
-</html>
+  </div>
+</div>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+  $(document).ready(function() {
+    // Handle pagination click event
+    $('.pagination a').on('click', function(event) {
+      event.preventDefault();
+      const url = $(this).attr('href');
+
+      // Send AJAX request
+      $.ajax({
+        url: url,
+        type: 'GET',
+        success: function(response) {
+          // Update the content with the response
+          $('.site-section').html($(response).find('.site-section').html());
+        },
+        error: function(error) {
+          console.log(error);
+        }
+      });
+    });
+
+    // Handle search form submission
+    $('#search-form').on('submit', function(event) {
+      event.preventDefault();
+      const url = $(this).attr('action');
+      const formData = $(this).serialize();
+
+      // Send AJAX request
+      $.ajax({
+        url: url,
+        type: 'GET',
+        data: formData,
+        success: function(response) {
+          // Update the content with the response
+          $('.site-section').html($(response).find('.site-section').html());
+        },
+        error: function(error) {
+          console.log(error);
+        }
+      });
+    });
+// Handle category selection
+$('.category-card-link').on('click', function(event) {
+  event.preventDefault();
+  const url = $(this).attr('href');
+  console.log('Category URL:', url);
+
+  // Send AJAX request
+  $.ajax({
+    url: url,
+    type: 'GET',
+    success: function(response) {
+      console.log('Category AJAX Response:', response);
+      // Update the content with the response
+      $('.site-section').html($(response).find('.site-section').html());
+    },
+    error: function(error) {
+      console.log('Category AJAX Error:', error);
+    }
+  });
+});
+$(document).ready(function() {
+  // Existing JavaScript code...
+
+  // Activate the carousel
+  $('#category-carousel').carousel();
+  });
+</script>
+
 {% endblock %}

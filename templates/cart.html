@@ -1,176 +1,140 @@
-{% extends 'theme.html' %}
+{% extends "theme.html" %}
+{% load static %}
+
 {% block content %}
-<div class="container py-5">
-  <h1 class="text-center mb-5">Checkout</h1>
-  <div class="table-responsive">
-    <table class="table">
-      <thead>
-        <tr>
-          <th scope="col">Product</th>
-          <th scope="col">Price</th>
-          <th scope="col">Variant</th>
-          <th scope="col">Quantity</th>
-          <th scope="col">Total</th>
-          <th scope="col">Remove</th>
-        </tr>
-      </thead>
-      <tbody id="cart-items">
-        {% for item in cart_items %}
-        <tr>
-          <td>
+<br>
+<br>
+<div class="row">
+  <div class="col-md-8">
+    <div class="cart-items">
+      {% if cart_items %}
+      {% for item in cart_items %}
+      <div class="cart-item">
+        <div class="row">
+          <div class="col-md-3">
             {% if item.product.images.all %}
             {% with item.product.images.all|first as img %}
-            <img src="{{ img.image.url }}" alt="Image" class="img-fluid" style="max-width: 100px;">
-            <h2 class="h5 text-black item-name">{{ item.product }}</h2>
+            <img src="{{ img.image.url }}" alt="Image" class="img-fluid cart-item-image">
             {% endwith %}
             {% endif %}
-            <p style="color:red">Stock {{ item.variant.stock }}</p>
-          </td>
-          <td class="item-price">₹{{ item.variant.price }}</td>
-          <td>{{ item.variant.variant }}</td>
-          <td>
-            <div class="input-group mb-3" style="max-width: 120px;">
-              <button class="btn btn-outline-primary js-btn-minus minus-cart" pid="{{ item.variant.id }}" type="button">&minus;</button>
-              <input
-                data-variant-id="{{ item.variant.id }}"
-                data-stock="{{ item.variant.stock }}"
-                type="number"
-                class="form-control text-center quantity-input"
-                value="{{ item.quantity }}"
-                placeholder=""
-                aria-label="Example text with button addon"
-                aria-describedby="button-addon1"
-              >
-              <button class="btn btn-outline-primary js-btn-plus plus-cart" pid="{{ item.variant.id }}" type="button">&plus;</button>
+          </div>
+          <div class="col-md-9">
+            <div class="cart-item-details">
+              <h2 class="h5 text-black cart-item-name">{{ item.product }}</h2>
+              <p class="cart-item-variant">{{ item.variant.variant }}</p>
+              <p class="cart-item-price">Price: {{ item.variant.price_after_offer }}</p>
+              {% if item.variant.stock < 10 %}
+              <p class="cart-item-stock" style="color: red;">Stock:{{ item.variant.stock }}</p>
+              {% endif %}
+              <form method="POST" action="{% url 'cart' %}">
+                {% csrf_token %}
+                <input type="hidden" name="variant_id" value="{{ item.variant.id }}">
+                <div class="input-group cart-quantity">
+                  <button class="btn btn-outline-secondary cart-btn-minus" type="submit" name="action" value="minus">-</button>
+                  <span class="form-control cart-quantity-input">{{ item.quantity }}</span>
+                  <button class="btn btn-outline-secondary cart-btn-plus" type="submit" name="action" value="plus" {% if item.variant.stock <= item.quantity %}disabled{% endif %}>+</button>
+                </div>
+                {% if item.variant.stock <= item.quantity %}
+              <p class="cart-stock-not-available" style="color: red;">Only {{item.variant.stock }} Nos is Available</p>
+                {% endif %}
+              </form>
             </div>
-          </td>
-          <td id="subtotal-{{ item.variant.id }}">₹{{ item.subtotal }}</td>
-          <td>
-            <a style="color:red" href="{% url 'remove_variant_from_cart' item.variant.id %}">
-              <i class="fas fa-trash-alt"></i>
-            </a>
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-12">
+            <form method="POST" action="{% url 'remove_variant_from_cart' item.variant.id %}">
+              {% csrf_token %}
+              <button class="btn btn-danger btn-sm cart-btn-remove" type="submit">Remove</button>
+            </form>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+      {% else %}
+      <!-- Cart is empty message -->
+      <div class="cart-empty-message text-center">
+        <h3>Your cart is empty</h3>
+        <p>Start shopping now to add products to your cart.</p>
+        <button class="btn btn-primary" onclick="window.location='{% url 'shop' %}'">Shop Now</button>
+      </div>
+    {% endif %}
+    </div>
   </div>
-
-  <div class="row justify-content-end">
-    <div class="col-md-7">
-      <div class="row">
-        <div class="col-md-12 text-right border-bottom mb-5">
-          <h3 class="text-black h4 text-uppercase">Cart Totals</h3>
-        </div>
+  <div class="col-md-4">
+    <div class="card cart-summary">
+      <div class="card-body">
+        <h5 class="card-title">Cart Summary</h5>
+        <p class="card-text">Total Price: {{ total_price }}</p>
+        <p class="card-text">Total Quantity: {{ total_quantity }}</p>
       </div>
-      <div class="row mb-3">
-        <div class="col-md-6">
-          <span class="text-black">Total Quantity</span>
-        </div>
-        <div class="col-md-6 text-right">
-          <strong class="text-black" id="quantityajax">{{ total_quantity }}</strong>
-        </div>
-      </div>
-      <div class="row mb-5">
-        <div class="col-md-6">
-          <span class="text-black">Total Price</span>
-        </div>
-        <div class="col-md-6 text-right">
-          <strong class="text-black" id="totalajax">₹ {{ total_price }}</strong>
-        </div>
-      </div>
-      <div class="row">
-        <div class="col-md-12">
-          <button class="btn btn-success btn-lg py-3 btn-block" onclick="window.location='{% url 'checkout' %}'">Proceed To Checkout</button>
-        </div>
-      </div>
+      <button class="btn btn-success btn-lg py-3 btn-block cart-btn-checkout" onclick="window.location='{% url 'checkout' %}'">Proceed To Checkout</button>
     </div>
   </div>
 </div>
 
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script>
-    $(document).ready(function() {
-      // Event listener for minus button
-      $('.minus-cart').click(function() {
-        var variantId = $(this).attr('pid');
-        var quantityInput = $(this).siblings('.quantity-input');
-        var newQuantity = parseInt(quantityInput.val()) - 1;
-  
-        // Make AJAX request
-        $.ajax({
-          url: '{% url "decrement_quantity" 0 %}'.replace('0', variantId),
-          type: 'GET',
-          data: {
-            quantity: newQuantity
-          },
-          success: function(response) {
-            // Update quantity in the input field
-            quantityInput.val(newQuantity);
-            // Update subtotal and cart totals
-            updateSubtotalAndTotals(variantId);
-          },
-          error: function(error) {
-            console.log(error);
-          }
-        });
-      });
-  
-      // Event listener for plus button
-      $('.plus-cart').click(function() {
-        var variantId = $(this).attr('pid');
-        var quantityInput = $(this).siblings('.quantity-input');
-        var stock = parseInt(quantityInput.data('stock'));
-        var currentQuantity = parseInt(quantityInput.val());
-  
-        if (currentQuantity < stock) {
-          var newQuantity = currentQuantity + 1;
-  
-          // Make AJAX request
-          $.ajax({
-            url: '{% url "increment_quantity" 0 %}'.replace('0', variantId),
-            type: 'GET',
-            data: {
-              quantity: newQuantity
-            },
-            success: function(response) {
-              // Update quantity in the input field
-              quantityInput.val(newQuantity);
-              // Update subtotal and cart totals
-              updateSubtotalAndTotals(variantId);
-            },
-            error: function(error) {
-              console.log(error);
-            }
-          });
-        }
-      });
-  
-      // Function to update subtotal and cart totals
-      function updateSubtotalAndTotals(variantId) {
-        // Make AJAX request to update the subtotal and cart totals
-        $.ajax({
-          url: '{% url "update_subtotal_and_totals" 0 %}'.replace('0', variantId),
-          type: 'GET',
-          success: function(response) {
-            // Update the subtotal in the UI
-            var subtotalElement = $('#subtotal-' + variantId);
-            subtotalElement.text('₹' + response.subtotal);
-  
-            // Update the total quantity in the UI
-            var totalQuantityElement = $('#total-quantity');
-            totalQuantityElement.text(response.total_quantity);
-  
-            // Update the total price in the UI
-            var totalPriceElement = $('#total-price');
-            totalPriceElement.text('₹' + response.total_price);
-          },
-          error: function(error) {
-            console.log(error);
-          }
-        });
-      }
-    });
-  </script>
-  
+<style>
+  .cart-items {
+    margin-bottom: 20px;
+  }
+
+  .cart-item {
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 15px;
+    margin-bottom: 20px;
+  }
+
+  .cart-item-image {
+    max-width: 100px;
+  }
+
+  .cart-item-details {
+    margin-left: 15px;
+  }
+
+  .cart-item-name {
+    margin-bottom: 5px;
+  }
+
+  .cart-item-variant {
+    color: #888;
+    margin-bottom: 5px;
+  }
+
+  .cart-item-price {
+    margin-bottom: 5px;
+  }
+
+  .cart-item-stock {
+    margin-bottom: 5px;
+  }
+
+  .cart-quantity {
+    max-width: 120px;
+    margin-bottom: 5px;
+  }
+
+  .cart-quantity-input {
+    text-align: center;
+  }
+
+  .cart-stock-not-available {
+    margin-top: 5px;
+    margin-bottom: 5px;
+  }
+
+  .cart-btn-remove {
+    margin-top: 10px;
+  }
+
+  .cart-summary {
+    padding: 15px;
+  }
+
+  .cart-btn-checkout {
+    margin-top: 10px;
+  }
+</style>
+
 {% endblock %}

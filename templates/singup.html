@@ -1,483 +1,58 @@
-{% load static %}
-<!DOCTYPE html>
-<html lang="en">
+{% extends 'theme.html' %}
 
-<head>
-    <meta charset="utf-8">
-    <title>Get Orgi</title>
-    <meta content="width=device-width, initial-scale=1.0" name="viewport">
-    <meta content="" name="keywords">
-    <meta content="" name="description">
-
-
-    <link href="{% static 'img/favicon.ico" rel="icon' %}">
-
-
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500&family=Lora:wght@600;700&display=swap" rel="stylesheet"> 
-
-
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.4.1/font/bootstrap-icons.css" rel="stylesheet">
-
-
-    <link href="{% static 'lib/animate/animate.min.css' %}" rel="stylesheet">
-    <link href="{% static 'lib/owlcarousel/assets/owl.carousel.min.css' %}" rel="stylesheet">
-
-
-    <link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet">
-
-    
-    <link href="{% static 'css/style.css" rel="stylesheet' %}">
-    <style>
-        .cart-hover:hover {
-            background-color: #F8F9FA;
-            color: #212529;
-          }
-          .popup {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background-color: #fff;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.5);
-            display: none;
-            z-index: 9999;
-          }
-          
-          .popup p {
-            margin: 0 0 10px;
-          }
-          
-          .popup .login-btn {
-            background-color: #007bff;
-            color: #fff;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            cursor: pointer;
-          }
-          
-          .popup .login-btn:hover {
-            background-color: #0062cc;
-          }
-          
-          .popup.show {
-            display: block;
-          }
-		  .input-group-text {
-			height: 38px;
-		}
-		.input-group-text {
-			height: 38px;
-		}
-	
-	
-
-	</style>
-    </style>
-</head>
-
+{% block content %}
 <body>
-
-
-    <!-- Navbar Start -->
-    <div class="container-fluid fixed-top px-0 wow fadeIn" data-wow-delay="0.1s">
-      <div class="top-bar row gx-0 align-items-center d-none d-lg-flex">
- 
- 
-         </div> 
- 
-         <nav class="navbar navbar-expand-lg navbar-light py-lg-0 px-lg-5 wow fadeIn" data-wow-delay="0.1s">
-             <a href="" class="navbar-brand ms-4 ms-lg-0">
-                 <h1 class="fw-bold text-primary m-0">Get<span class="text-secondary">O</span>rgi</h1>
-             </a>
-             <button type="button" class="navbar-toggler me-4" data-bs-toggle="collapse" data-bs-target="#navbarCollapse">
-                 <span class="navbar-toggler-icon"></span>
-             </button>
-             <div class="collapse navbar-collapse" id="navbarCollapse">
-                 <div class="navbar-nav ms-auto p-4 p-lg-0">
-                     <a href="{% url 'shop'%}" class="nav-item nav-link active">Home</a>
-                     <a href="" class="nav-item nav-link">About Us</a>
-                     <a href="" class="nav-item nav-link">Products</a>
-                     <div class="nav-item dropdown">
-                      <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">Activites</a>
-                      <div class="dropdown-menu m-0">
-                        
-                        <a class="dropdown-item category" href="{% url 'order'%}" data-category-id="" onclick="showLoginPopup(event)">My Orders</a>
-                        
-                      </div>
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="card mt-5">
+                    <div class="card-body">
+                        <h2 class="card-title text-center">Registration</h2>
+                        <form method="post" class="mt-4">
+                            {% csrf_token %}
+                            <div class="form-group">
+                                <label for="uname">Username:</label>
+                                <input type="text" id="uname" name="uname" class="form-control" required>
+                                {% if errors.uname %}
+                                    <p class="text-danger">{{ errors.uname }}</p>
+                                {% endif %}
+                            </div>
+                            <div class="form-group">
+                                <label for="uemail">Email:</label>
+                                <input type="email" id="uemail" name="uemail" class="form-control" required>
+                                {% if errors.uemail %}
+                                    <p class="text-danger">{{ errors.uemail }}</p>
+                                {% endif %}
+                            </div>
+                            <div class="form-group">
+                                <label for="phone">Phone:</label>
+                                <input type="text" id="phone" name="phone" class="form-control" required>
+                                {% if errors.phone %}
+                                    <p class="text-danger">{{ errors.phone }}</p>
+                                {% endif %}
+                            </div>
+                            <div class="form-group">
+                                <label for="upassword">Password:</label>
+                                <input type="password" id="upassword" name="upassword" class="form-control" required>
+                                {% if errors.upassword %}
+                                    <p class="text-danger">{{ errors.upassword }}</p>
+                                {% endif %}
+                            </div>
+                            <div class="form-group">
+                                <label for="upassword2">Confirm Password:</label>
+                                <input type="password" id="upassword2" name="upassword2" class="form-control" required>
+                                {% if errors.upassword2 %}
+                                    <p class="text-danger">{{ errors.upassword2 }}</p>
+                                {% endif %}
+                            </div>
+                            <div class="text-center">
+                                <button type="submit" class="btn btn-primary">Register</button>
+                            </div>
+                        </form>
                     </div>
-                     <a href="" class="nav-item nav-link">Contact Us</a>
-                 </div>
-                 <div class="d-none d-lg-flex ms-2">
-                     <a class="btn-sm-square bg-white rounded-circle ms-3" href="">
-                         <small class="fa fa-search text-body"></small>
-                     </a>
-                     <a class="btn-sm-square bg-white rounded-circle ms-3" href="">
-                         <small class="fa fa-user text-body"></small>
-                     </a>
-                     <a class="btn-sm-square bg-white rounded-circle ms-3" href="{% url 'cart'%}" onclick="showLoginPopup(event)">
-                         <small class="fa fa-shopping-bag text-body"></small>
-                     </a>
-                       
-                       <div class="popup">
-                         <p>Please log in to access this feature</p>
-                         <button class="login-btn">Log In</button>
-                       </div>
-                       
-                 </div>
-             </div>
-         </nav>
-     </div>
+                </div>
+            </div>
+        </div>
     </div>
-  </div>
-</div>
-     <!-- Navbar End -->
-<br>
-<br>
-<br>
-</head>
-<body>
-	<body>
-		<div class="container">
-			{% if messages %}
-				{% for message in messages %}
-					<div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-						{{ message }}
-						<button type="button" class="close" data-dismiss="alert" aria-label="Close">
-							<span aria-hidden="true">&times;</span>
-						</button>
-					</div>
-				{% endfor %}
-			{% endif %}
-		</div>
-		
-		<div class="container h-100">
-			<div class="d-flex justify-content-center h-100">
-				<div class="user_card shadow-lg">
-					<div class="d-flex justify-content-center">
-						<h3 id="form-title">REGISTER ACCOUNT</h3>
-					</div>
-					<div class="d-flex justify-content-center form_container">
-	
-	
-						<form method="POST" action="">
-							{% csrf_token %}
-							<div class="input-group mb-3">
-								<div class="input-group-append">
-									<span class="input-group-text"><i class="fas fa-user"></i></span>
-								</div>
-								{{form.username}}
-							</div>
-							<div class="input-group mb-2">
-								<div class="input-group-append">
-									<span class="input-group-text"><i class="fas fa-envelope-square"></i></span>
-								</div>
-								{{form.email}}
-							</div>
-							<div class="input-group mb-2">
-								<div class="input-group-append">
-									<span class="input-group-text"><i class="fas fa-phone "></i></span>
-									</div>
-									{{form.mobile_number}}
-							</div>
-							<div class="input-group mb-2">
-								<div class="input-group-append">
-									<span class="input-group-text"><i class="fas fa-key"></i></span>
-								</div>
-								{{form.password1}}
-							</div>
-							<div class="input-group mb-2">
-								<div class="input-group-append">
-									<span class="input-group-text"><i class="fas fa-key"></i></span>
-								</div>
-								{{form.password2}}
-							</div>
-	
-							   <div class="d-flex justify-content-center mt-3 login_container">
-								 <input class="btn btn-success login_btn" type="submit" value="Register Account">
-							   </div>
-						</form>
-					</div>
-			
-					<div class="mt-4">
-						<div class="d-flex justify-content-center links">
-							Already have an account? <a href="{% url 'otp_login' %}" class="ml-2">Login</a>
-							
-						</div>
-						{% if messages %}
-	  {% for message in messages %}
-		<div class="alert alert-danger">{{ message }}</div>
-	  {% endfor %}
-	{% endif %}
-						</div>
-						</div>
-	
-					
-			</div>
-		</div>
-	</body>
-
-
-	<div class="container-fluid bg-dark footer mt-5 pt-5 wow fadeIn" data-wow-delay="0.1s">
-		<div class="container py-5">
-			<div class="row g-5">
-				<div class="col-lg-3 col-md-6">
-					<h1 class="fw-bold text-primary mb-4">Get<span class="text-secondary">O</span>rgi</h1>
-					<p>Diam dolor diam ipsum sit. Aliqu diam amet diam et eos. Clita erat ipsum et lorem et sit, sed stet lorem sit clita</p>
-					<div class="d-flex pt-2">
-						<a class="btn btn-square btn-outline-light rounded-circle me-1" href=""><i class="fab fa-twitter"></i></a>
-						<a class="btn btn-square btn-outline-light rounded-circle me-1" href=""><i class="fab fa-facebook-f"></i></a>
-						<a class="btn btn-square btn-outline-light rounded-circle me-1" href=""><i class="fab fa-youtube"></i></a>
-						<a class="btn btn-square btn-outline-light rounded-circle me-0" href=""><i class="fab fa-linkedin-in"></i></a>
-					</div>
-				</div>
-				<div class="col-lg-3 col-md-6">
-					<h4 class="text-light mb-4">Address</h4>
-					<p><i class="fa fa-map-marker-alt me-3"></i>Kattakada,TVM,Kerala</p>
-					<p><i class="fa fa-phone-alt me-3"></i>+91 7736448062</p>
-					<p><i class="fa fa-envelope me-3"></i>getorgi@gmail.com</p>
-				</div>
-				<div class="col-lg-3 col-md-6">
-					<h4 class="text-light mb-4">Quick Links</h4>
-					<a class="btn btn-link" href="">About Us</a>
-					<a class="btn btn-link" href="">Contact Us</a>
-					<a class="btn btn-link" href="">Our Services</a>
-					<a class="btn btn-link" href="">Terms & Condition</a>
-					<a class="btn btn-link" href="">Support</a>
-				</div>
-				<div class="col-lg-3 col-md-6">
-					<h4 class="text-light mb-4">Newsletter</h4>
-					<p>la ala ala ala ala a.</p>
-					<div class="position-relative mx-auto" style="max-width: 400px;">
-						
-					   
-						{% if username in request.session.%}
-						<a class="btn btn-link" href="{% url 'user_logout'%}">Log Out</a>
-						{% else%}
-						<a class="btn btn-link" href="{% url 'otp_login'%}">Log Out</a>
-						
-						{% endif %}
-					</div>
-				</div>
-			</div>
-		</div>
-		<div class="container-fluid copyright">
-			<div class="container">
-				<div class="row">
-					<div class="col-md-6 text-center text-md-start mb-3 mb-md-0">
-						&copy; <a href="#">getorgi</a>, All Right Reserved.
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
-	<!-- Footer End -->
-  
-  
-	<!-- Back to Top -->
-	<a href="#" class="btn btn-lg btn-primary btn-lg-square rounded-circle back-to-top"><i class="bi bi-arrow-up"></i></a>
-  
-  
-	<!-- JavaScript Libraries -->
-	<script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
-	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/js/bootstrap.bundle.min.js"></script>
-	<script src="{% static 'lib/wow/wow.min.js' %}"></script>
-	<script src="{% static 'lib/easing/easing.min.js' %}"></script>
-	<script src="{% static 'lib/waypoints/waypoints.min.js' %}"></script>
-	<script src="{% static 'lib/owlcarousel/owl.carousel.min.js' %}"></script>
-  
-	<!-- Template Javascript -->
-	<script src="{% static 'js/main.js' %}"></script>
-	<script>
-	  $(document).ready(function() {
-		  $('a[href="{% url 'cart' %}"]').click(function(e) {
-			  e.preventDefault();
-			  {% if request.session.username %}
-				  // User is logged in, redirect to the cart page
-				  window.location.href = "{% url 'cart' %}";
-			  {% else %}
-				  // User is not logged in, show login popup
-				  var loginPopup = '<div class="modal fade" id="loginModal" tabindex="-1" role="dialog">' +
-					  '<div class="modal-dialog" role="document">' +
-					  '<div class="modal-content">' +
-					  '<div class="modal-header">' +
-					  '<h5 class="modal-title">Login Required</h5>' +
-					  '<button type="button" class="close" data-dismiss="modal" aria-label="Close">' +
-					  '<span aria-hidden="true">&times;</span>' +
-					  '</button>' +
-					  '</div>' +
-					  '<div class="modal-body">' +
-					  '<p>You need to login to access this feature.</p>' +
-					  '</div>' +
-					  '<div class="modal-footer">' +
-					  '<a href="{% url 'user_login' %}" class="btn btn-primary">Login</a>' +
-					  '<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>' +
-					  '</div>' +
-					  '</div>' +
-					  '</div>' +
-					  '</div>';
-				  $(loginPopup).modal('show');
-			  {% endif %}
-		  });
-	  });
-  </script>
-  
-  <script>
-	$('.plus-cart').click(function(){
-	  console.log("Inside plus cart")
-	  var id = $(this).attr("pid").toString();
-	  var eml = this.parentNode.parentNode.parentNode.parentNode.children[4]
-	  //var input = document.getElementById("innerquantity");
-	  //var value = input.value;
-	  //console.log("Value"+value)
-	  $.ajax({
-		type:"GET",
-		url:"/plus_cart",
-		data:{
-		  prod_id : id,
-		  //quant_value : value,
-		},
-		success: function (datap) {
-		  eml.innerText = ("₹"+datap.ind_subtotal)
-		  //console.log("Quant Value"+datap.quantity_value)
-		  //var output = document.getElementById("innerquantity");
-		  //output.value = datap.quantity_value;
-		  //document.getElementById("innerquantity").innerText.value = quantity_value;
-		  //document.getElementById("innerquantity").innerText = quantity_value;
-		  document.getElementById("quantityajax").innerText = datap.quantity;
-		  document.getElementById("totalajax").innerText = ("₹ " + datap.total);
-		}
-	  })
-	
-	  })
-	  $('.minus-cart').click(function(){
-	  console.log("Inside minus cart")
-	  var id = $(this).attr("pid").toString();
-	  var eml = this.parentNode.parentNode.parentNode.parentNode.children[4]
-	  $.ajax({
-		type:"GET",
-		url:"/minus_cart",
-		data:{
-		  prod_id : id
-		},
-		success: function (datap) {
-		  eml.innerText = ("₹"+datap.ind_subtotal)
-		  document.getElementById("quantityajax").innerText = datap.quantity;
-		  document.getElementById("totalajax").innerText = ("₹ " + datap.total);
-		}
-	  })
-	
-	  })
-  </script>
-  
-  <script>
-  
-	const link1 = document.querySelector('.my-link1');
-	const link2 = document.querySelector('.my-link2');
-  
-  
-	link1.addEventListener('click', function(event) {
-	  event.preventDefault(); // prevent default link behavior
-	
-	  if (confirm('You really want to cancel?')) {
-		window.location.href = link1.href; // redirect to link URL
-	  }
-	});
-  
-	link2.addEventListener('click', function(event) {
-	  event.preventDefault(); // prevent default link behavior
-	
-	  if (confirm('You really want to return?')) {
-		window.location.href = link2.href; // redirect to link URL
-	  }
-	});
-  
-	  
-	
-	
-  
-  </script>
-  
-  
-  
-  
-  
-  
-  <script>
-	$(document).ready(function(){
-	  $('#your-id').owlCarousel({
-		loop:true,
-		margin:10,
-		nav:true,
-		items:1
-	  });
-	});
-	</script>
-	
-	
-	<!-- JavaScript Alertify -->
-	<script src="//cdn.jsdelivr.net/npm/alertifyjs@1.13.1/build/alertify.min.js"></script>
-	<script>
-	  {% for flashmsg in messages %}
-	   alertify.set('notifier','position', 'bottom-right');
-	 {% if flashmsg.tags == 'warning' %}
-	   alertify.warning('{{flashmsg}}');
-	 {% elif flashmsg.tags == 'success' %}
-	 alertify.success('{{flashmsg}}');
-	 {% endif %}
-	 {% endfor %}
-	  
-	 </script>
-	
-	
-	<script src="{% static 'js/jquery-3.3.1.min.js' %}"></script>
-	<script src="{% static 'js/jquery-ui.js' %}"></script>
-	<script src="{% static 'js/popper.min.js' %}"></script>
-	<script src="{% static 'js/bootstrap.min.js' %}"></script>
-	<script src="{% static 'js/owl.carousel.min.js' %}"></script>
-	<script src="{% static 'js/jquery.magnific-popup.min.js' %}"></script>
-	<script src="{% static 'js/aos.js' %}"></script>
-	
-	<script src="{% static 'js/main.js' %}"></script>
-
-
-	<script>
-
-		//Query All input fields
-		var form_fields = document.getElementsByTagName('input')
-		form_fields[1].placeholder='Username..';
-		form_fields[2].placeholder='Email..';
-		form_fields[3].placeholder='Phone..';
-		form_fields[4].placeholder='Enter password...';
-		form_fields[5].placeholder='Re-enter Password...';
-
-
-		for (var field in form_fields){	
-			form_fields[field].className += ' form-control'
-		}
-	</script>
 </body>
-</html>
-
-
-
-{% comment %} <form method="post">
-    {% csrf_token %}
-    {{form.username.label}}
-    {{form.username}}
-
-    {{form.email.label}}
-    {{form.email}}
-
-    {{form.password1.label}}
-    {{form.password1}}
-
-    {{form.password2.label}}
-    {{form.password2}}
-    <button type="submit">Sign Up</button>
-  </form> {% endcomment %}
+{% endblock %}

@@ -1,8 +1,11 @@
 {% extends 'admin_dash.html' %}
 
 {% block content %}
+<body style=" background-color: #232323;">
+    
 <div class="container-fluid bg-dark">
     <div class="row justify-content-center">
+       
         <div class="col-md-6">
             <div class="text-center text-light py-5">
                 <h1>{{ product.name }}</h1>
@@ -22,17 +25,25 @@
                             <input type="number" name="offer_percentage" id="offer_percentage" class="form-control" required>
                         </div>
                         <button type="submit" name="add_offer" class="btn btn-primary">Add Offer</button>
+                        <a class="nav-link" href="{% url 'admin_page' %}">Back To Products</a>
                     </form>
                 {% endif %}
-
+                {% if messages %}
+                <div class="alert alert-dismissible fade show mt-3" role="alert">
+                  {% for message in messages %}
+                  {{ message }}
+                  {% endfor %}
+                  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+              {% endif %}
                 <h2 class="mt-5">Variants</h2>
                 <ul class="list-group list-group-flush bg-dark">
                     {% for variant in variants %}
-                        <li class="list-group-item text-light bg-dark">{{ variant.variant }} - Price: {{ variant.price }}</li>
+                        <li class="list-group-item text-light bg-dark">{{ variant.variant }} - Price: {{ variant.price_after_offer }}</li>
                     {% endfor %}
                 </ul>
             </div>
         </div>
     </div>
-</div>
+</div></body>
 {% endblock%}

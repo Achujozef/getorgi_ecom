@@ -1,62 +1,117 @@
 {% extends "theme.html" %}
-
+{% load static %}
 {% block content %}
-<div class="product">
-  <div class="product-images">
-    <img id="current-image" src="{{ product.images.first.image.url }}" alt="{{ product.name }}">
-    <div class="icon-container">
-      {% for image in product.images.all|slice:"1" %}
-      <i class="fas fa-circle" data-image-url="{{ image.image.url }}"></i>
-      {% endfor %}
+
+
+
+    <div class="site-section">
+      <div class="container">
+        <div class="row mb-5">
+          <form class="col-md-12" method="post">
+            <div class="site-blocks-table">
+              <table class="table table-bordered">
+                <thead>
+                  <tr>
+                   
+                    <th class="product-name">Product</th>
+                    <th class="product-price">Price</th>
+                    <th scope="col">Variant</th>
+                    <th class="product-quantity">Quantity</th>
+                    <th class="product-total">Total</th>
+                    <th class="product-remove">Remove</th>
+                  </tr>
+                </thead>
+                <tbody>
+               
+                   {% for item in cart_items %}
+                  <tr>
+                              <td>
+            {% if item.product.images.all %}
+            {% with item.product.images.all|first as img %}
+            <img src="{{ img.image.url }}" alt="Image" class="img-fluid" style="max-width: 100px;">
+            <h2 class="h5 text-black item-name">{{ item.product }}</h2>
+            {% endwith %}
+            {% endif %}
+            {% if item.variant.stock < 10 %}
+            <p style="color: red;"> Only {{ item.variant.stock }} Nos left</p>
+            {% endif %}
+          </td>
+                    <td>₹{{ item.variant.price_after_offer }}</td>
+                    <td>{{ item.variant.variant }}</td>
+                    <td>
+                      <div class="input-group mb-3" style="max-width: 120px;">
+                        <div class="input-group-prepend">
+                          <button class="btn btn-outline-primary js-btn-minus minus-cart" pid="{{item.variant.id}}" type="button">&minus;</button>
+                        </div>
+                        <input type="text" class="form-control text-center" value="{{item.quantity}}" placeholder="" aria-label="Example text with button addon" aria-describedby="button-addon1" id="innerquantity">
+                        <div class="input-group-append">
+                          <button class="btn btn-outline-primary js-btn-plus plus-cart" pid="{{item.variant.id}}" type="button">&plus;</button>
+                        </div>
+                      </div>
+
+                    </td>
+                    <td>₹{{item.subtotal}}</td>
+
+                    <td>
+
+
+                          <a href="{% url 'remove_variant_from_cart' item.variant.id %}" class="btn btn-primary" >X </a>
+
+
+                    </td>
+                  </tr>
+
+            
+                  {% endfor %}
+
+
+                </tbody>
+              </table>
+            </div>
+          </form>
+        </div>
+
+        <div class="row">
+          <div class="col-md-6">
+            <!--
+            -->
+          </div>
+          <div class="col-md-6 pl-5">
+            <div class="row justify-content-end">
+              <div class="col-md-7">
+                <div class="row">
+                  <div class="col-md-12 text-right border-bottom mb-5">
+                    <h3 class="text-black h4 text-uppercase">Cart Totals</h3>
+                  </div>
+                </div>
+                <div class="row mb-3">
+                  <div class="col-md-6">
+                    <span class="text-black">Total Quantity</span>
+                  </div>
+                  <div class="col-md-6 text-right">
+                    <strong class="text-black" id="quantityajax"> {{total_quantity}}</strong>
+                  </div>
+                </div>
+                <div class="row mb-5">
+                  <div class="col-md-6">
+                    <span class="text-black">Total Price</span>
+                  </div>
+                  <div class="col-md-6 text-right">
+                    <strong class="text-black" id="totalajax">₹ {{total_price}}</strong>
+                  </div>
+                </div>
+
+                <div class="row">
+                  <div class="col-md-12">
+                    <button class="btn btn-success btn-lg py-3 btn-block" onclick="window.location='{% url 'checkout' %}'">Proceed To Checkout</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
-    <i class="fas fa-chevron-left"></i>
-    <i class="fas fa-chevron-right"></i>
-  </div>
-  <div class="product-details">
-    <h1>{{ product.name }}</h1>
-    <p>{{ product.description }}</p>
-    <p>Price: {{ product.price }}</p>
-  </div>
-</div>
-{% endblock %}
 
-{% block script %}
-<script>
-// Get references to the arrow buttons, image container, and navigation icons
-const prevButton = document.querySelector('.fa-chevron-left');
-const nextButton = document.querySelector('.fa-chevron-right');
-const image = document.querySelector('#current-image');
-const icons = Array.from(document.querySelectorAll('.icon-container i[data-image-url]'));
+  {% endblock %}
 
-// Set the initial index to 0 (i.e. the first image)
-let currentIndex = 0;
-
-// Add event listeners to the arrow buttons and navigation icons
-prevButton.addEventListener('click', () => {
-  // Decrement the current index, wrapping around if necessary
-  currentIndex = (currentIndex - 1 + icons.length) % icons.length;
-
-  // Update the image source with the new index
-  const newImageSrc = icons[currentIndex].getAttribute('data-image-url');
-  image.src = newImageSrc;
-});
-
-nextButton.addEventListener('click', () => {
-  // Increment the current index, wrapping around if necessary
-  currentIndex = (currentIndex + 1) % icons.length;
-
-  // Update the image source with the new index
-  const newImageSrc = icons[currentIndex].getAttribute('data-image-url');
-  image.src = newImageSrc;
-});
-
-icons.forEach((icon, index) => {
-  icon.addEventListener('click', () => {
-    // Update the current index and image source with the clicked icon
-    currentIndex = index;
-    const newImageSrc = icon.getAttribute('data-image-url');
-    image.src = newImageSrc;
-  });
-});
-</script>
-{% endblock %}

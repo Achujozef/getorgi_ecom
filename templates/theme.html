@@ -12,6 +12,20 @@
 
     <link href="{% static 'img/favicon.ico" rel="icon' %}">
 
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.3/jquery.min.js"></script>
+
+    <!-- CSS (ALertify)-->
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/alertifyjs@1.13.1/build/css/alertify.min.css"/>
+    <!-- Default theme (ALertify)-->
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/alertifyjs@1.13.1/build/css/themes/default.min.css"/>
+
+    <!-- Banner carousel-->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.carousel.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.theme.default.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/owl.carousel.min.js"></script>
+
+     
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.2.1/css/fontawesome.min.css" integrity="sha384-QYIZto+st3yW+o8+5OHfT6S482Zsvz2WfOzpFSXMF9zqeLcFV0/wlZpMtyFcZALm" crossorigin="anonymous">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -374,53 +388,7 @@
       });
   });
 </script>
-<script>
-  $('.plus-cart').click(function(){
-    console.log("Inside plus cart")
-    var id = $(this).attr("pid").toString();
-    var eml = this.parentNode.parentNode.parentNode.parentNode.children[4]
-    //var input = document.getElementById("innerquantity");
-    //var value = input.value;
-    //console.log("Value"+value)
-    $.ajax({
-      type:"GET",
-      url:"/plus_cart",
-      data:{
-        prod_id : id,
-        //quant_value : value,
-      },
-      success: function (datap) {
-        eml.innerText = ("₹"+datap.ind_subtotal)
-        //console.log("Quant Value"+datap.quantity_value)
-        //var output = document.getElementById("innerquantity");
-        //output.value = datap.quantity_value;
-        //document.getElementById("innerquantity").innerText.value = quantity_value;
-        //document.getElementById("innerquantity").innerText = quantity_value;
-        document.getElementById("quantityajax").innerText = datap.quantity;
-        document.getElementById("totalajax").innerText = ("₹ " + datap.total);
-      }
-    })
-  
-    })
-    $('.minus-cart').click(function(){
-    console.log("Inside minus cart")
-    var id = $(this).attr("pid").toString();
-    var eml = this.parentNode.parentNode.parentNode.parentNode.children[4]
-    $.ajax({
-      type:"GET",
-      url:"/minus_cart",
-      data:{
-        prod_id : id
-      },
-      success: function (datap) {
-        eml.innerText = ("₹"+datap.ind_subtotal)
-        document.getElementById("quantityajax").innerText = datap.quantity;
-        document.getElementById("totalajax").innerText = ("₹ " + datap.total);
-      }
-    })
-  
-    })
-</script>
+
 
 <script>
 

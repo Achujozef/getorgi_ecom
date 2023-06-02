@@ -12,7 +12,7 @@ from .forms import CreateUserForm,VariantForm,CouponForm,BannerForm
 from django.forms import formset_factory
 from django.shortcuts import get_object_or_404
 from .models import UserDetail, Product, Category
-from .models import Category,Variant,Wallet
+from .models import Category,Variant,Wallet,Transaction
 from .forms import CategoryForm
 from django.contrib.auth.hashers import check_password
 from django.contrib import messages
@@ -50,7 +50,7 @@ from django.db.models import Count
 import calendar
 import io
 import razorpay
-from datetime import datetime, time, timedelta
+
 from django.http import FileResponse
 from django.views import View
 from django.contrib.auth import authenticate, login
@@ -58,12 +58,13 @@ from django.http import HttpResponse
 from django.template.loader import render_to_string
 
 import os 
-import datetime
+
 
 import requests
 from django.template.loader import get_template
 
 from datetime import datetime
+import pytz
 from django.db import models
 from django.db.models import Sum
 from io import BytesIO
@@ -227,56 +228,66 @@ def otp_verify(request):
 
 
 
+
+from django.core.exceptions import ObjectDoesNotExist
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from django.core.exceptions import ValidationError
+from .models import UserDetail
 @never_cache
 def req_singup(request):
-    if 'username' in request.session:
-        del request.session['username']
-    form = CreateUserForm()
     if request.method == 'POST':
-        form = CreateUserForm(request.POST)
-        if form.is_valid():
-            username = form.cleaned_data.get('username')
-            email = form.cleaned_data.get('email')
-            phone = form.cleaned_data.get('mobile_number')
-            otp = generate_otp()
-            password1 = form.cleaned_data.get('password1')
-            password2 = form.cleaned_data.get('password2')
-            request.session['otp'] = otp
-            request.session['phone'] = phone
-            if not username or username.isspace():
-                messages.info(request, 'Username cannot be blank or just spaces.')
-            elif len(username) < 4:
-                messages.info(request, 'Username must contain at least 4 letters.')
-            elif any(char.isdigit() for char in username):
-                messages.error(request, 'Username cannot contain numbers.')
-            elif UserDetail.objects.filter(uname=username).exists():
-                messages.error(request, 'This username is already taken.')
-            elif not email or email.isspace():
-                messages.info(request, 'Email cannot be blank or just spaces.')
-            elif UserDetail.objects.filter(uemail=email).exists():
-                messages.error(request, 'This email is already taken.')
-            elif not phone or phone.isspace():
-                messages.info(request, 'Phone number cannot be blank or just spaces.')
-            elif not phone.isdigit() or len(phone) != 10:
-                messages.error(request, 'Invalid phone number.')
-            elif UserDetail.objects.filter(phone=phone).exists():
-                messages.error(request, 'This phone number is already taken.')
-            elif password1 != password2:
-                messages.error(request, 'Passwords must match.')
+        uname = request.POST.get('uname')
+        uemail = request.POST.get('uemail')
+        phone = request.POST.get('phone')
+        upassword = request.POST.get('upassword')
+        upassword2 = request.POST.get('upassword2')
 
-            else:
-                user_detail = UserDetail(uname=username, uemail=email, upassword=password1, phone=phone)
-                user_detail.save()
-                form.save()
-                user = UserDetail.objects.get(uname=username)
-       
-        
-        
-                created = Wallet.objects.get_or_create(user=user, defaults={'balance': 0})
-                
-                return redirect('otp_login')
-    context = {'form': form}
-    return render(request, 'singup.html', context)
+        # Validation checks
+        errors = {}
+
+        if not uname.isalpha():
+            errors['uname'] = 'Username should only contain alphabetic characters.'
+
+        if uname.isspace() or len(uname) < 4:
+            errors['uname'] = 'Username should be at least 4 characters long and should not contain only spaces.'
+
+        if not phone.isdigit() or len(phone) != 10:
+            errors['phone'] = 'Phone number should be a 10-digit number.'
+
+        if len(upassword) < 8:
+            errors['upassword'] = 'Password should be at least 8 characters long.'
+
+        if upassword != upassword2:
+            errors['upassword2'] = 'Passwords do not match.'
+
+        # Check if username already exists
+        try:
+            existing_username = UserDetail.objects.get(uname=uname)
+            errors['uname'] = 'Username already exists. Please choose another username.'
+        except ObjectDoesNotExist:
+            pass
+
+        # Check if phone number already exists
+        try:
+            existing_phone = UserDetail.objects.get(phone=phone)
+            errors['phone'] = 'Phone number already exists. Please choose another phone number.'
+        except ObjectDoesNotExist:
+            pass
+
+        if errors:
+            return render(request, 'singup.html', {'errors': errors})
+
+        # Create a new UserDetail object
+        user = UserDetail(uname=uname, uemail=uemail, phone=phone, upassword=upassword)
+        user.save()
+
+        # Create an empty Wallet for the user
+        wallet = Wallet(user=user, balance=Decimal('0.00'))
+        wallet.save()
+        return redirect('user_login')
+
+    return render(request, 'singup.html')
 
 
 
@@ -285,11 +296,26 @@ def req_singup(request):
 def add_variant_prod(request, product_id):
     product = get_object_or_404(Product, pk=product_id)
     if request.method == 'POST':
-        variant_name = request.POST['variant_name']
-        variant_price = request.POST['variant_price']
-        variant_stock = request.POST['variant_stock']
-        ProductVariant.objects.create(product=product, variant=variant_name, price=variant_price, stock=variant_stock)
-        return redirect('admin_page')
+        variant_name = request.POST['variant_name'].strip()
+        variant_price = request.POST['variant_price'].strip()
+        variant_stock = request.POST['variant_stock'].strip()
+
+        if variant_name == '':
+            messages.error(request, 'Variant name cannot be empty.')
+        elif variant_price == '':
+            messages.error(request, 'Variant price cannot be empty.')
+        elif not variant_price.isdigit() or int(variant_price) <= 0:
+            messages.error(request, 'Variant price should be a positive integer.')
+        elif variant_stock == '':
+            messages.error(request, 'Variant stock cannot be empty.')
+        elif not variant_stock.isdigit() or int(variant_stock) < 0:
+            messages.error(request, 'Variant stock should be a non-negative integer.')
+
+        if not messages.get_messages(request):
+            ProductVariant.objects.create(product=product, variant=variant_name, price=variant_price, stock=variant_stock)
+            messages.success(request, 'Variant added successfully.')
+            return redirect('admin_page')
+
     return render(request, 'add_variant.html', {'product': product})
 
 def edit_variants(request, product_id):
@@ -297,14 +323,34 @@ def edit_variants(request, product_id):
     variants = ProductVariant.objects.filter(product=product)
     if request.method == 'POST':
         for variant in variants:
-            variant_name = request.POST[f'{variant.id}_name']
-            variant_price = request.POST[f'{variant.id}_price']
-            variant_stock = request.POST[f'{variant.id}_stock']
-            variant.variant = variant_name
-            variant.price = variant_price
-            variant.stock = variant_stock
-            variant.save()
-        return redirect('admin_page')
+            variant_name = request.POST.get(f'{variant.id}_name', '').strip()
+            variant_price = request.POST.get(f'{variant.id}_price', '').strip()
+            variant_stock = request.POST.get(f'{variant.id}_stock', '').strip()
+
+            if variant_name == '':
+                messages.error(request, 'Variant name cannot be empty.')
+            elif variant_price == '':
+                messages.error(request, 'Variant price cannot be empty.')
+            elif not variant_price.isdigit() or int(variant_price) < 0:
+                messages.error(request, 'Variant price should be a non-negative integer.')
+            elif variant_stock == '':
+                messages.error(request, 'Variant stock cannot be empty.')
+            elif not variant_stock.isdigit() or int(variant_stock) < 0:
+                messages.error(request, 'Variant stock should be a non-negative integer.')
+
+            if not messages.get_messages(request):
+                variant.variant = variant_name
+                variant.set_price(int(variant_price))  # Convert variant_price to an integer
+                variant.stock = variant_stock
+                variant.save()
+
+                if f'{variant.id}_delete' in request.POST:
+                    variant.delete()
+
+        if not messages.get_messages(request):
+            messages.success(request, 'Variants updated successfully.')
+            return redirect('admin_page')
+
     return render(request, 'edit_variants.html', {'product': product, 'variants': variants})
 from django.shortcuts import HttpResponseRedirect
 from django.urls import reverse
@@ -649,7 +695,7 @@ def shop(request):
         else:
             details3=Product.objects.filter(listed=True)
 
-        paginator = Paginator(details3, 9)
+        paginator = Paginator(details3, 18)
         page_number = request.GET.get('page')
         page_obj = paginator.get_page(page_number)
         return render(request, 'index_user.html', {'page_obj': page_obj,'cat':cat,'products':products})
@@ -688,8 +734,7 @@ def add_to_cart(request):
                 # If the product variant is not in the cart, create a new cart item
                 cart_item = NewCartItem.objects.create(cart=cart, user=user, product=variant.product, variant=variant)
 
-            variant.stock -= 1
-            variant.save()
+            
 
             return redirect('cart')
     else:
@@ -763,7 +808,7 @@ def itemcalculate(name):
     set2=set1.id
     data=NewCartItem.objects.filter(cart__user__id=set2)
     for d in data:
-        x=int(d.variant.price)
+        x=int(d.variant.price_after_offer)
         y=int(d.quantity)
         total += (x*y)
         quantity += d.quantity
@@ -773,31 +818,8 @@ def itemcalculate(name):
     }
     return({'data':data, 'datap':datap})
 
-from django.http import JsonResponse
 
-def increment_quantity(request, variant_id):
-    cart_item = get_object_or_404(NewCartItem, variant_id=variant_id)
-    cart_item.quantity += 1
-    cart_item.save()
-
-    # Calculate new subtotal
-    subtotal = cart_item.quantity * cart_item.variant.price
-
-    return JsonResponse({'subtotal': subtotal})
-
-def decrement_quantity(request, variant_id):
-    cart_item = get_object_or_404(NewCartItem, variant_id=variant_id)
-    if cart_item.quantity > 1:
-        cart_item.quantity -= 1
-        cart_item.save()
-    else:
-        cart_item.delete()
-        return JsonResponse({'status': 'deleted'})
-
-    # Calculate new subtotal
-    subtotal = cart_item.quantity * cart_item.variant.price
-
-    return JsonResponse({'subtotal': subtotal})
+    
 def cart(request):
     if 'username' in request.session:
         username = request.session['username']
@@ -808,8 +830,6 @@ def cart(request):
             return redirect('shop')
 
         cart = NewCart.objects.filter(user=user).first()
-        
-       
 
         if cart:
             cart_items = cart.items.all()
@@ -817,25 +837,47 @@ def cart(request):
             total_price = 0
             total_quantity = 0
             for item in cart_items:
-                subtotal = item.quantity * item.variant.price  # Assuming the product price is stored in the 'price' field
+                subtotal = item.quantity * item.variant.price_after_offer
                 subtotal_list.append(subtotal)
                 item.subtotal = subtotal
-                total_price =total_price+ subtotal
-                total_quantity =total_quantity+ item.quantity
+                total_price += subtotal
+                total_quantity += item.quantity
         else:
             cart_items = []
             subtotal_list = []
             total_price = 0
             total_quantity = 0
-            return render(request,'empty.html')
+            return render(request, 'empty.html')
+
+        if request.method == 'POST':
+            variant_id = request.POST.get('variant_id')
+            action = request.POST.get('action')
+
+            if variant_id and action:
+                variant = ProductVariant.objects.get(id=variant_id)
+                cart_item = NewCartItem.objects.filter(cart=cart, variant=variant).first()
+
+                if cart_item:
+                    if action == 'plus':
+                        cart_item.quantity += 1
+                    elif action == 'minus':
+                        cart_item.quantity -= 1
+
+                    if cart_item.quantity <= 0:
+                        cart_item.delete()
+                        messages.success(request, 'Variant removed from cart successfully.')
+                    else:
+                        cart_item.save()
+                        messages.success(request, 'Quantity updated successfully.')
+
+                    return redirect('cart')
 
         context = {
             'cart_items': cart_items,
             'subtotal_list': subtotal_list,
             'total_price': total_price,
             'total_quantity': total_quantity,
-
-        }
+    }
         return render(request, 'cart.html', context)
     else:
         # User is not logged in
@@ -850,11 +892,34 @@ def cart(request):
             total_quantity = 0
 
             for item in cart_items:
-                subtotal = item.quantity * item.variant.price  # Assuming the product price is stored in the 'price' field
+                subtotal = item.quantity * item.variant.price
                 subtotal_list.append(subtotal)
                 item.subtotal = subtotal
                 total_price += subtotal
                 total_quantity += item.quantity
+
+            if request.method == 'POST':
+                variant_id = request.POST.get('variant_id')
+                action = request.POST.get('plus') or request.POST.get('minus')
+
+                if variant_id and action:
+                    variant = ProductVariant.objects.get(id=variant_id)
+                    cart_item = NewCartItem.objects.filter(cart=cart, variant=variant).first()
+
+                    if cart_item:
+                        if action == 'plus':
+                            cart_item.quantity += 1
+                        elif action == 'minus':
+                            cart_item.quantity -= 1
+
+                        if cart_item.quantity <= 0:
+                            cart_item.delete()
+                            messages.success(request, 'Variant removed from cart successfully.')
+                        else:
+                            cart_item.save()
+                            messages.success(request, 'Quantity updated successfully.')
+
+                        return redirect('cart')
 
             context = {
                 'cart_items': cart_items,
@@ -868,170 +933,13 @@ def cart(request):
         else:
             # Guest user has no items in the cart
             return render(request, 'empty.html')
-        
     
-def update_subtotal_and_totals(request, variant_id):
-    # Retrieve the necessary data
-    cart_item = get_object_or_404(NewCartItem, variant_id=variant_id)
 
-    # Perform calculations
-    subtotal = cart_item.quantity * cart_item.variant.price
-
-    # Update the cart item's subtotal
-    cart_item.subtotal = subtotal
-    cart_item.save()
-
-    # Calculate total quantity and total price for the cart
-    cart = cart_item.cart
-    cart_items = cart.items.all()
-    total_quantity = sum(item.quantity for item in cart_items)
-    total_price = sum(item.subtotal for item in cart_items)
-
-    # Return the updated subtotal, total quantity, and total price as a JSON response
-    return JsonResponse({
-        'subtotal': subtotal,
-        'total_quantity': total_quantity,
-        'total_price': total_price,
-    })
-def update_cart(request):
-    if request.method == 'GET':
-        user = request.user
-        cart_item_id = request.GET.get('cart_item_id')
-        quantity = request.GET.get('quantity')
-        
-        cart_item = NewCartItem.objects.get(Q(id=cart_item_id) & Q(cart__user=user))
-        cart_item.quantity = int(quantity)
-        cart_item.save()
-        
-        data = {
-            'success': True,
-            'subtotal': cart_item.get_total_price,
-        }
-        
-        return JsonResponse(data)
-
-
-
-def delcartitems(request):
-    if 'username' in request.session:
-        id=request.GET['id']
-        it=CartItem.objects.get(cartitemid=id)
-        if it.quantity<=0:
-            return render (request,'empty.html')
-        cart_quantity = it.quantity
-        cart_product = it.product.name
-        Product.objects.filter(name=cart_product).update(stock=F('stock')+cart_quantity)
-        CartItem.objects.filter(cartitemid=id).delete()
-        return redirect('cart')
-    else:
-        return redirect('userlogin')
 def empty(request):
     return render(request, 'empty.html')
 
-
-
-def plus_cart(request):
-    if request.method == 'GET':
-        use = request.session['username']
-        user = UserDetail.objects.get(uname = use)
-        prod_id=request.GET['prod_id']
-        c = NewCartItem.objects.get(Q(product=prod_id) & Q(cart__user=user))
-        c.quantity+=1
-        c.save()
-        ProductVariant.objects.filter(id=prod_id).update(stock=F('stock') - 1)
-        d = NewCartItem.objects.get(Q(product=prod_id) & Q(cart__user=user))
-        sub = d.get_total_price
-        ret = itemcalculate(use)
-        datap = {
-            'total': ret['datap']['total'],
-            'quantity': ret['datap']['quantity'],
-            'ind_subtotal': sub,
-        }
-        return JsonResponse(datap)
     
-def minus_cart(request):
-    if request.method == 'GET':
-        use = request.session['username']
-        user = UserDetail.objects.get(uname = use)
-        prod_id=request.GET['prod_id']
-        c = NewCartItem.objects.get(Q(product=prod_id) & Q(cart__user=user))
-        c.quantity-=1
-        c.save()
-        Product.objects.filter(id=prod_id).update(stock=F('stock') + 1)
-        d = NewCartItem.objects.get(Q(product=prod_id) & Q(cart__user=user))
-        sub = d.subtotal
-        ret = itemcalculate(use)
-        datap = {
-            'total': ret['datap']['total'],
-            'quantity': ret['datap']['quantity'],
-            'ind_subtotal': sub,
-        }
-        return JsonResponse(datap)
-    
-
-
-
 #######################################################################################################
-# def checkout(request):
-#     if 'username' in request.session:
-#         if request.method=='POST':
-#             if 'addressform' in request.POST:
-#                 fm = UserAddressForm(request.POST) 
-#                 if fm.is_valid():
-#                     use = request.session['username']
-#                     user = UserDetail.objects.get(uname = use)
-#                     reg = fm.save(commit=False)
-#                     reg.user = user
-#                     reg.save()
-#                     messages.success(request, 'new address added successfully')
-#                     return redirect('checkout') 
-#                 else:
-#                     messages.warning(request,'Enter correct address') 
-#                     return render(request, 'checkout.html', {'fm': fm})
-#             elif 'couponform' in request.POST:
-#                 check = request.POST.get('c_code')
-#                 uname=request.session['username']
-#                 try:
-#                     obj = Coupon.objects.get(is_active=True,coupon_code=check)
-#                 except:
-#                     messages.warning(request,'No coupon')
-#                     return redirect('checkout')
-#                 # if check==obj.coupon_code and obj.is_active:
-#                 #     Coupon.objects.filter(user__uname=uname).update(applied=False)
-#                 #     Coupon.objects.filter(user__uname=uname,is_active=True,coupon_code=check).update(applied=True)
-#                 if check==obj.coupon_code and obj.is_active:
-#                     pass
-#                 else:
-#                     messages.warning(request,'Coupon is not valid')
-#                 return redirect('checkout')            
-#         else:
-#             fm = UserAddressForm()
-#             use = request.session['username']
-
-#             context=Address.objects.filter(user__uname = use).order_by('-id')
-
-#             try:
-#                 coup = Coupon.objects.get(is_active=True,applied=True)
-#                 ret = itemcalculate(use)
-#                 disc = ret['datap']['total']
-#                 applied_discount = disc - coup.discount_price
-#             except Coupon.DoesNotExist:
-#                 coup = None
-#                 ret = itemcalculate(use)
-#                 disc = ret['datap']['total']
-#                 applied_discount = disc - 0
-#             except:
-#                 coup = Coupon.objects.get(is_active=True)
-#                 ret = itemcalculate(use)
-#                 disc = ret['datap']['total']
-#                 applied_discount = disc - 0
-#             if disc<=0:
-#                 messages.warning(request,'Order total is less than or equal to zero')
-#                 return redirect('cart')
-#             coupon = Coupon.objects.filter(is_active=True)
-#             return render(request, 'checkout.html', {'fm': fm, 'context': context, 'data':ret['data'], 'datap':ret['datap'],'coup':coup,'disc':applied_discount,'coupon':coupon})
-#     else:
-#         return redirect('user_login')
 def checkout(request):
     if 'username' in request.session:
         if request.method=='POST':
@@ -1050,8 +958,9 @@ def checkout(request):
                     return render(request, 'checkout.html', {'fm': fm})
             elif 'couponform' in request.POST:
                 check = request.POST.get('c_code')
-                minimum_amount = Coupon.objects.get(is_active=True).minimum_amount
-                
+                request.session['code']=check
+                minimum_amount = Coupon.objects.get(is_active=True,coupon_code=check).minimum_amount
+
                 if not check:
                     messages.warning(request, 'Please enter a coupon code')
                     return redirect('checkout')
@@ -1070,29 +979,40 @@ def checkout(request):
                     messages.warning(request, 'Invalid coupon')
                     return redirect('checkout')
 
-                if obj.applied:
-                    messages.warning(request, 'Coupon already applied')
-                    
-                    return redirect('checkout')
-                else:
-                    Coupon.objects.filter(is_active=True).update(applied=False)
-                    obj.applied = True
-                    obj.is_active=False
-                    obj.save()
-                    messages.success(request, 'Coupon applied successfully')
+            if obj.applied:
+                messages.warning(request, 'Coupon already applied')
+                return redirect('checkout')
+            else:
+                obj.applied = True
+                obj.save()
 
-                return redirect('checkout')            
+                # Recalculate the total price after applying the discount
+                ret = itemcalculate(request.session['username'])
+                disc = ret['datap']['total']
+                applied_discount = disc - obj.discount_price
+            
+                messages.success(request, 'Coupon applied successfully')
+                return redirect('checkout')
+
         else:
             fm = UserAddressForm()
             use = request.session['username']
-
-            context=Address.objects.filter(user__uname = use).order_by('-id')
+            user = UserDetail.objects.get(uname=use)
+            wallet = Wallet.objects.get(user=user)
+            balance = wallet.balance
+            code=request.session['code']
+            context = Address.objects.filter(user__uname=use).order_by('-id')
 
             try:
-                coup = Coupon.objects.get(is_active=True, applied=True)
+                coup = Coupon.objects.get(is_active=True,coupon_code=code, applied=True)
+
+                # Calculate the initial total price before applying any coupon
                 ret = itemcalculate(use)
                 disc = ret['datap']['total']
+
+                # Calculate the discounted price after applying the coupon
                 applied_discount = disc - coup.discount_price
+                request.session['code_amt']=coup.discount_price
             except Coupon.DoesNotExist:
                 coup = None
                 ret = itemcalculate(use)
@@ -1107,9 +1027,13 @@ def checkout(request):
             if disc <= 0:
                 messages.warning(request, 'Order total is less than or equal to zero')
                 return redirect('cart')
-
+            
             coupon = Coupon.objects.filter(is_active=True)
-            return render(request, 'checkout.html', {'fm': fm, 'context': context, 'data': ret['data'], 'datap': ret['datap'], 'coup': coup, 'disc': applied_discount, 'coupon': coupon})
+            
+            return render(request, 'checkout.html', {'fm': fm, 'context': context, 'data': ret['data'],
+                                                     'datap': ret['datap'], 'coup': coup,
+                                                     'disc': applied_discount, 'coupon': coupon,
+                                                     'balance': balance})
     else:
         return redirect('user_login')
     
@@ -1181,6 +1105,8 @@ def order(request):
 def orderconfirm(request):
     if 'username' in request.session:    
         user = request.session['username']
+        code = request.session['code']
+        code_amt=request.session['code_amt']
         use1 = UserDetail.objects.get(uname = user)
         try:
             use2 = Address.objects.get(user=use1,selected=True)
@@ -1189,28 +1115,57 @@ def orderconfirm(request):
             return redirect('checkout')
         cart = NewCartItem.objects.filter(cart__user__uname=use1)
         try:
-            coupon = Coupon.objects.get(user=use1,is_active=True,applied=True)
+            coupon = Coupon.objects.get(is_active=True,applied=True,coupon_code=code)
             discount = coupon.discount_price
         except:
             discount = 0
         cartcount = cart.count()
+        # Get the current Indian time
+        
+        ordered_date = datetime.now().date
         for c in cart:
-            Order(user=use1, address=use2,variant=c.variant, product=c.product, amount=c.get_total_price-(discount)/cartcount).save()
+            variant = c.variant
+            variant.stock -= c.quantity
+            variant.save()
+            Order(user=use1,address=use2,variant=c.variant, product=c.product,quantity=c.quantity, amount=c.get_total_price-(code_amt/cartcount)).save()
             c.delete() 
+            
         return render(request,'orderconfirm.html')
     else:
         return redirect('otp_login')
     
-def cancelorder(request,id):
-    if 'username' in request.session:  
-        Order.objects.filter(id=id).update(status='Cancel Requested')
+def cancelorder(request, id):
+    if 'username' in request.session:
+        try:
+            order = Order.objects.select_related('user', 'address').get(id=id)
+        except Order.DoesNotExist:
+            return redirect('order')
+
+        # Update the order status
+        order.status = 'Cancel Requested'
+        order.save()
+        amount=order.amount
+        # Add the refunded amount back to the wallet
+        if order.ordertype == 'Razorpay' or order.ordertype == 'Wallet':
+            user = order.user
+            wallet = Wallet.objects.get(user=user)
+            wallet.deposit(amount,'Refund')
+           
+
         return redirect('order')
     else:
         return redirect('user_login')
 
 def returnorder(request,id):
     if 'username' in request.session: 
+        order = Order.objects.get(id=id)
         Order.objects.filter(id=id).update(status='Return Requested')
+        
+         # Deposit the order amount into the user's wallet
+        user = UserDetail.objects.get(uname=request.session['username'])
+        wallet, created = Wallet.objects.get_or_create(user=user, defaults={'balance': 0})
+        wallet.deposit(order.amount,"Refund")
+       
         return redirect('order')
     else:
         return redirect('otp_login')
@@ -1265,6 +1220,8 @@ def shopsingle(request):
 
 
 
+
+
 from django.views.generic import TemplateView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.urls import reverse_lazy
@@ -1310,21 +1267,6 @@ class DeleteVariantView(DeleteView):
     model = Variant
     template_name = 'variant.html'
     success_url = reverse_lazy('variant')
-        
-# def list_product(request,id):
-#     product = get_object_or_404(Product, id=id)
-#     product.listed = True
-#     product.save()
-#     return redirect('product_detail', id=id)
-
-# # view function to unlist a product
-# def unlist_product(request,id):
-#     product = get_object_or_404(Product, id=id)
-#     product.listed = False
-#     product.save()
-#     return redirect('product_detail', id=id)
-
-
 
 def userprofile(request):
     if 'username' in request.session:       
@@ -1505,7 +1447,7 @@ def razorpay(request):
                 return redirect('checkout')
             cart = NewCartItem.objects.filter(cart__user__uname=use1)
             for c in cart:
-                Order(user=use1, address=use2, product=c.product, amount=c.get_total_price, ordertype= 'Paid From Your Wallet').save()
+                Order(user=use1, address=use2, product=c.product, amount=c.get_total_price, ordertype= 'Razorpay').save()
                 c.delete()
             return render(request,'orderconfirm.html')
         else:
@@ -1581,72 +1523,108 @@ from reportlab.platypus import TableStyle,Table
 from reportlab.lib import colors
 import pandas as pd
 import openpyxl
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
+from reportlab.lib.pagesizes import letter, landscape
 def sales_report(request):
     if request.method == 'POST':    
         start_date = request.POST.get('start_date')
         end_date = request.POST.get('end_date')
         generate = request.POST.get('generate')
         if not start_date or not end_date:
-            messages.warning(request, 'Check dates')
+            messages.warning(request, 'Please select start and end dates.')
             return redirect('sales_report')
         if end_date < start_date:
-            messages.warning(request, 'start date is not less than end date')
+            messages.warning(request, 'Start date should be less than end date.')
             return redirect('sales_report')
-        elif end_date >= start_date:
-            if generate=='PDF':
-                buf = io.BytesIO()
-                c = canvas.Canvas(buf,pagesize=letter, bottomup=1)
-                textob = c.beginText()
-                textob.setTextOrigin(inch, inch)
-                textob.setFont("Helvetica", 16)
-                orders = Order.objects.all()
-                if start_date and end_date:
-                    start_date = datetime.strptime(start_date, '%Y-%m-%d').date()
-                    end_date = datetime.strptime(end_date, '%Y-%m-%d').date()
-                    orders = orders.order_by('-ordered_date').filter(ordered_date__range=[start_date, end_date])
-                else:
-                    orders = Order.objects.all().order_by('-order_date')
-                if not orders.exists():
-                    messages.warning(request,'No data found')
-                    return redirect('sales_report')           
-                table_header = ["Customer Name", "Product Title", "Order Date and Time", "Order Status", "Payment Status"]            
-                table_data = []
-                for ord in orders:
-                    row_data = [ord.address.user.uname, ord.product.name, str(ord.ordered_date), str(ord.status), str(ord.ordertype)]
-                    table_data += [row_data]
-                pdfTable = Table([table_header] +table_data)           
-                pdfTableStyle = TableStyle([('BACKGROUND', (0, 0), (-1, 0), colors.lightblue)]) 
-                pdfTable.setStyle(pdfTableStyle)
-                pdfTable.wrapOn(c, 100, 100)
-                pdfTable.drawOn(c, 10, 10 + 5)
-                c.drawText(textob)
-                c.showPage()
-                c.save()
-                buf.seek(0)
-                return FileResponse(buf, as_attachment=True, filename="Sales report.pdf")
-
-            else:
-                orders = Order.objects.filter(ordered_date__range=[start_date, end_date])
-                if not orders.exists():
-                    messages.warning(request,'No data found')
-                    return redirect('sales_report') 
-                orders_df = pd.DataFrame(list(orders.values()))
-                try:
-                    orders_df.drop(['user_id', 'address_id'], axis=1, inplace=True)
-                except:
-                    messages.warning(request,'Something wrong')
-                    return redirect('sales_report')
-                orders_df.rename(columns={'product_id': 'product_id', 'amount': 'amount', 'ordered_date': 'ordered_date', 'ordertype': 'order_type', 'status': 'status'}, inplace=True)
-                orders_df['ordered_date'] = orders_df['ordered_date'].apply(lambda x: x.strftime("%Y-%m-%d %H:%M:%S"))
-                response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-                response['Content-Disposition'] = 'attachment; filename=orders.xlsx'
-                orders_df.to_excel(response, index=False)
-                return response   
-            
+        
+        orders = Order.objects.all()
+        if start_date and end_date:
+            start_date = datetime.strptime(start_date, '%Y-%m-%d').date()
+            end_date = datetime.strptime(end_date, '%Y-%m-%d').date()
+            orders = orders.filter(ordered_date__range=[start_date, end_date])
         else:
-            print("!!Unidentified")
+            # If start and end dates are not provided, fetch all orders
+            orders = Order.objects.all()
+
+        if not orders.exists():
+            messages.warning(request, 'No data found.')
+            return redirect('sales_report')           
+
+        if generate == 'PDF':
+            # Generate PDF report
+            buffer = io.BytesIO()
+            doc = SimpleDocTemplate(buffer, pagesize=landscape(letter))
+
+            # Define table data
+            table_data = [["Customer Name", "Product Title", "Order Date", "Order Status", "Payment Status", "Amount"]]
+            total_amount = 0
+            for order in orders:
+                row_data = [
+                    order.address.user.uname,
+                    order.product.name,
+                    order.ordered_date.date().strftime('%Y-%m-%d'),
+                    order.status,
+                    order.ordertype,
+                    order.amount
+                ]
+                table_data.append(row_data)
+                total_amount += order.amount
+
+            # Add total sale row
+            total_row = ["", "", "", "", "Total Sale", total_amount]
+            table_data.append(total_row)
+
+            # Define table style
+            table_style = [
+                ('BACKGROUND', (0, 0), (-1, 0), colors.lightblue)
+            ]
+
+            # Create the table and set style
+            table = Table(table_data)
+            table.setStyle(TableStyle(table_style))
+
+            # Build the PDF document
+            elements = [table]
+            doc.build(elements)
+
+            # Prepare and return the PDF response
+            buffer.seek(0)
+            response = HttpResponse(buffer, content_type='application/pdf')
+            response['Content-Disposition'] = 'attachment; filename="Sales_Report.pdf"'
+            return response
+
+        else:
+            # Generate Excel report
+            orders_df = pd.DataFrame(list(orders.values()))
+            orders_df.drop(['user_id', 'address_id'], axis=1, inplace=True)
+            orders_df.rename(
+                columns={
+                    'product_id': 'Product ID',
+                    'amount': 'Amount',
+                    'ordered_date': 'Order Date',
+                    'ordertype': 'Order Type',
+                    'status': 'Status'
+                },
+                inplace=True
+            )
+            orders_df['Order Date'] = orders_df['Order Date'].apply(lambda x: x.strftime('%Y-%m-%d'))
+
+            # Calculate total amount
+            total_amount = orders_df['Amount'].sum()
+
+            # Add total sale row
+            total_row = {"Product ID": "", "Amount": "", "Order Date": "", "Order Type": "Total Sale", "Status": total_amount}
+            orders_df = pd.concat([orders_df, pd.DataFrame([total_row])], ignore_index=True)
+
+            # Create Excel file response
+            response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            response['Content-Disposition'] = 'attachment; filename=Sales_Report.xlsx'
+            orders_df.to_excel(response, index=False)
+
+            return response
+
     else:
-        return render(request,'sales_report.html')
+        return render(request, 'sales_report.html')
 
 def handle_not_found(request,exception):
     return render(request,'not-found.html')
@@ -1756,13 +1734,16 @@ def deposit_view(request):
     if request.method == 'POST':
         username = request.session['username']
         user = UserDetail.objects.get(uname=username)
-        amount =  Decimal(request.POST.get('amount'))
+        amount = Decimal(request.POST.get('amount'))
         
-        # Retrieve or create the wallet for the user
-        wallet, created = Wallet.objects.get_or_create(user=user, defaults={'balance': 0})
+        if amount <= 0:
+            messages.error(request, 'Amount must be a positive number.')
+            return redirect('deposit')
         
-        wallet.deposit(amount)
+        wallet = Wallet.objects.get(user=user)
+        wallet.deposit(amount, "Deposit")
         return redirect('balance')
+    
     return render(request, 'deposit.html')
 
 def withdraw_view(request):
@@ -1771,8 +1752,16 @@ def withdraw_view(request):
         user = UserDetail.objects.get(uname=username)
         amount = float(request.POST.get('amount'))
         wallet = Wallet.objects.get(user=user)
-        wallet.withdraw(amount)
-        return redirect('wallet_balance_view')
+
+        if amount <= 0:
+            messages.error(request, 'Please enter a Valid amount.')
+        elif amount > wallet.balance:
+            messages.error(request, 'Insufficient balance.')
+        else:
+            wallet.withdraw(amount, "Withdrawed")
+            messages.success(request, 'Withdrawal successful.')
+            return redirect('balance')
+
     return render(request, 'withdraw.html')
 
 def transfer_view(request):
@@ -1780,12 +1769,31 @@ def transfer_view(request):
         username = request.session['username']
         user = UserDetail.objects.get(uname=username)
         amount = float(request.POST.get('amount'))
-        recipient= request.POST.get('recipient')
+        recipient = request.POST.get('recipient')
+        
+        # Check if recipient username is valid
+        try:
+            recipient_username = UserDetail.objects.get(uname=recipient)
+        except UserDetail.DoesNotExist:
+            messages.error(request, 'Invalid recipient username')
+            return redirect('transfer')
+        
+        # Check if amount is positive
+        if amount <= 0:
+            messages.error(request, 'Amount must be a positive number')
+            return redirect('transfer')
+        
         wallet = Wallet.objects.get(user=user)
-        recipient_username=UserDetail.objects.get(uname=recipient)
         recipient_wallet = Wallet.objects.get(user=recipient_username)
+        
+        # Check if sender has sufficient balance
+        if wallet.balance < amount:
+            messages.error(request, 'Insufficient balance')
+            return redirect('transfer')
+        
         wallet.transfer(amount, recipient_wallet)
         return redirect('wallet_balance_view')
+    
     return render(request, 'transfer.html')
 
 def wallet_payment_view(request):
@@ -1796,7 +1804,7 @@ def wallet_payment_view(request):
         amount = float(amount)
         wallet = Wallet.objects.get(user=user)
         if wallet.balance >=  Decimal(str(amount)):
-            wallet.withdraw(amount)
+            wallet.withdraw(amount,'Paid For Order')
             try:
                 use2 = Address.objects.get(user=user,selected=True)
             except:
@@ -1804,9 +1812,13 @@ def wallet_payment_view(request):
                 return redirect('checkout')
             cart = NewCartItem.objects.filter(cart__user__uname=user)
             for c in cart:
-                Order(user=user, address=use2, product=c.product, amount=c.get_total_price, ordertype= 'Paid From Your Wallet').save()
+                variant = c.variant
+                variant.stock -= c.quantity
+                variant.save()
+                Order(user=user, address=use2, product=c.product, amount=c.get_total_price,variant=c.variant, ordertype= 'Wallet').save()
                 c.delete()
-            
+                
+
             return redirect('orderconfirm')
         else:
             return render(request, 'insufficient_balance.html')
@@ -1819,6 +1831,16 @@ def product_offer(request, product_id):
     if request.method == 'POST':
         if 'add_offer' in request.POST:
             offer_percentage = int(request.POST['offer_percentage'])
+            if offer_percentage < 0 or offer_percentage > 100:
+                # Invalid offer percentage entered, show a message and don't proceed
+                error_message = "Invalid offer percentage"
+                context = {
+                    'product': product,
+                    'variants': variants,
+                    'messages': error_message,
+                }
+                return render(request, 'product_offer.html', context)
+            
             product.give_offer(offer_percentage)
             return redirect('product_offer', product_id=product_id)
         elif 'remove_offer' in request.POST:

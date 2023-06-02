@@ -5,8 +5,122 @@
 {% block content %}
 <!-- product_detail.html -->
 
-<!DOCTYPE html>
-<html>
+<style>
+
+  
+  .product-card .card-img-top {
+    height: 150px; /* Adjust the image height as desired */
+    object-fit: cover; /* Maintain aspect ratio and fill the available space */
+  }
+  
+  .product-card .card-body {
+    height: 150px; /* Adjust the body height as desired */
+    
+  }
+  .product-card:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+  .custom-select {
+    position: relative;
+    display: inline-block;
+    width: 200px;
+    height: 36px;
+    border-radius: 18px;
+    border: 2px solid #ccc;
+    overflow: hidden;
+    background-color: #fff;
+  }
+  
+  .select-icon {
+    position: absolute;
+    top: 50%;
+    right: 10px;
+    transform: translateY(-50%);
+    font-size: 20px;
+    color: #888;
+  }
+  
+  .custom-select select {
+    width: 100%;
+    height: 100%;
+    border: none;
+    outline: none;
+    padding: 0 12px;
+    font-size: 14px;
+    background-color: transparent;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+  
+  .custom-select select:focus {
+    border-color: #8ec0ff;
+  }
+  
+  .before-offer {
+    text-decoration: line-through;
+    color: #888;
+  }
+  
+  .after-offer {
+    color: green;
+    font-weight: bold;
+  }
+  .offer-info {
+    background-color: #f8f8f8;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+  }
+  
+  .offer-info h1 {
+    font-size: 24px;
+    color: #333;
+    text-align: center;
+    margin: 0;
+    padding: 5px 0;
+  }
+  
+  .offer-info h1:before,
+  .offer-info h1:after {
+    content: "";
+    display: inline-block;
+    width: 30px;
+    height: 2px;
+    background-color: #333;
+    vertical-align: middle;
+    margin: 0 10px;
+  }
+  
+  .offer-info h1:before {
+    margin-right: 20px;
+  }
+  
+  .offer-info h1:after {
+    margin-left: 20px;
+  }
+  {% comment %} .col-md-6 {
+    background-color: #f5f5f5;
+    border-radius: 10px;
+    padding: 20px;
+  } {% endcomment %}
+  
+  .product-details-title {
+    font-size: 24px;
+    color: #333;
+    margin-bottom: 10px;
+  }
+  
+  .product-details-description {
+    font-size: 16px;
+    color: #777;
+  }
+  
+  /* Optional: Add hover effect */
+  .col-md-6:hover {
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  }
+  
+</style>
 <head>
     <title>{{ product.name }}</title>    
 </head>
@@ -41,47 +155,47 @@
         <div>
           <p class="product-details-title pt-4 mb-0 fw-bold">{{product.name}}</p>
         </div>
-        {% comment %} <div class="pt-2 product-details-price fw-bold">
-          <p> Rs {{product.normalprice}}/Nos</p>
-        </div> {% endcomment %}
         <div>
           <p>{{product.description}}</p>
         </div>
-        {% if category_offer_percentage %}
-    <div class="offer-info">
-        <p>Now: {{ category_offer_percentage }}% Off From Actual Price</p>
-    </div>
-{% endif %}
-{% if product.offer_percentage %}
-    <div class="offer-info">
-        <p>Now: {{ product.offer_percentage }}% Off From Actual Price</p>
-    </div>
-{% endif %}
+        {% if category_offer_percentage or product.offer_percentage %}
+        <div class="offer-info">
+          {% if category_offer_percentage %}
+            <h1>Now: {{ category_offer_percentage }}% Off </h1>
+          {% endif %}
+          {% if product.offer_percentage %}
+            <h1>Now: {{ product.offer_percentage }}% Off </h1>
+          {% endif %}
+        </div>
+      {% endif %}
         {% if variants %}
           <div class="product-variants">
             <form method="post" action="{% url 'add_to_cart' %}">
               {% csrf_token %}
               <input type="hidden" name="product_id" value="{{ product.id }}">
               
-              <h3>Variants:</h3>
-              <select name="variant_id">
-                {% for variant in product.productvariant_set.all %}
-                  <option value="{{ variant.id }}">{{ variant.variant }} - Price: {{ variant.price }}</option>
-                {% endfor %}
-              </select>
+              <p>Optionts:</p>
+              <div class="custom-select">
+                <select name="variant_id" onchange="applyLineThrough(this)">
+                  {% for variant in product.productvariant_set.all %}
+                    {% if variant.price_after_offer or product.category.offer %}
+                      <option value="{{ variant.id }}">
+                        {{ variant.variant }} Not ₹ <span class="before-offer">{{ variant.price }}</span>
+                        Only <span class="after-offer">₹{{ variant.price_after_offer }}</span>
+                      </option>
+                    {% else %}
+                      <option value="{{ variant.id }}">{{ variant.variant }} - ₹{{ variant.price }}</option>
+                    {% endif %}
+                  {% endfor %}
+                </select>
+                <div class="select-icon">&#9662;</div>
+              </div>
+              
               
               <button type="submit" value="" class="buy-now btn btn-sm btn-primary" onclick="showLoginPopup(event)">Add to Cart</button>
             </form>
           </div>
         {% endif %}
-
-{% comment %}         
-        <form method='post' enctype='multipart/form-data' action="{% url 'add_to_cart'  %}">
-          {% csrf_token %}
-          <input type="hidden" value="{{product.id}}" name="pid">
-          <button type="submit" value="" class="buy-now btn btn-sm btn-primary" onclick="showLoginPopup(event)">Add to Cart</button>
-        </form> {% endcomment %}
-
         <div class="popup">
           <p>Please log in to access this feature</p>
           <button class="login-btn">Log In</button>
@@ -92,48 +206,50 @@
     </div>
   </div>
   <hr size="3" color="blue" width="100%">
-<div class="container my-5">
-  <div class="row mx-0 px-2" style="margin-left: -50px; margin-right: -50px;">
-    <div class="col-12">
-      <h4>Related products</h4>
-    </div>
-    <div class="col-12">
-      <div class="row mb-5">
-        {% for i in products_in_same_category %}
-        {% if i != product%}
-        <div class="col-sm-6 col-lg-3 mb-4" data-aos="fade-up">
-          <div class="block-4 text-center" style="height: 250px; width: 200px;" data-aos="fade-up">
-            <a href="{% url 'shopsingle' %}?uid={{i.id}}">
-              {% if i.images.all %}
-              {% with i.images.all|first as img %}
-              <img class="img-fluid w-100" src="{{ img.image.url }}" alt="{{ product.name }}">
-              {% endwith %}
+  <div class="container my-5">
+    <div class="row mx-0 px-2" style="margin-left: -50px; margin-right: -50px;">
+      <div class="col-12">
+        <h4>Related products</h4>
+        <div class="row mb-5">
+          {% for i in products_in_same_category %}
+            {% if i != product %}
+              <div class="col-sm-6 col-lg-2 mb-4">
+                <div class="card product-card border-0">
+                  {% if i.images.all %}
+                    {% with i.images.all|first as img %}
+                      <img class="card-img-top rounded" src="{{ img.image.url }}" alt="{{ product.name }}">
+                    {% endwith %}
+                  {% endif %}
+                  
+                  <div class="card-body">
+                    <h5 class="card-title product-name">
+                      <a href="{% url 'shopsingle' %}?uid={{ i.id }}">{{ i.name }}</a>
+                    </h5>
+                    <span style="font-size: smaller;">Free Delivery</span><br>
+                    {% if i.offer_percentage %}
+                      <span style="font-size: smaller;">{{ i.offer_percentage }}% Off</span>
+                    {% else %}
+                      <span style="font-size: smaller;">Check Offer</span>
+                    {% endif %}
+                   
+                    <div class="d-flex justify-content-between">
+                      <a href="{% url 'shopsingle' %}?uid={{ i.id }}" class="btn btn-primary">View</a>
+                      <a href="{% url 'wishlist' %}?wish_id={{ i.id }}" class="btn btn-outline-primary "><i class="fas fa-heart"></i></a>
+                    </div>
+                    
+                  </div>
+                </div>
+              </div>
+              {% if forloop.counter|divisibleby:6 %}
+                </div>
+                <div class="row mb-5">
               {% endif %}
-            </a>
-          </div>
-          <div class="block-4-text p-3">
-            <h3><a href="{% url 'shopsingle' %}?uid={{i.id}}">{{i.name}}</a></h3>
-            <p>₹ {{i.normalprice}}</p>
-          </div>
-          <div class="d-flex border-top">
-            <small class="w-50 text-center border-end py-2">
-              <a class="text-body" href="{% url 'shopsingle' %}?uid={{i.id}}"><i class="fa fa-eye text-primary me-2"></i>View detail</a>
-            </small>
-            <small class="w-50 text-center py-2">
-              <form method='post' enctype='multipart/form-data' action="{% url 'add_to_cart'  %}">
-                {% csrf_token %}
-                <input type="hidden" value="{{i.id}}" name="pid">
-                <button type="submit" value="" class="buy-now btn btn-sm btn-primary" onclick="showLoginPopup(event)">Add to Cart</button>
-              </form>
-            </small>
-          </div>
+            {% endif %}
+          {% endfor %}
         </div>
-        {%endif%}
-        {% endfor %}
       </div>
     </div>
   </div>
-</div>
 </body>
   <script>
     $(document).ready(function() {
@@ -202,7 +318,6 @@
       window.location.href = link2.href; // redirect to link URL
     }
   });
-
 
 </script>
 

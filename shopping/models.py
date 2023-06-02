@@ -1,6 +1,7 @@
 from django.db import models
 
 from decimal import Decimal
+
 # Create your models here.
  
 class Category(models.Model):
@@ -35,7 +36,7 @@ class Product(models.Model):
     category = models.ForeignKey(Category, on_delete=models.CASCADE,  null=True)
     normalprice = models.IntegerField(default=0)
     listed = models.BooleanField(default=True)
-    offer_percentage = models.IntegerField(blank=True, null=True)
+    offer_percentage = models.IntegerField(default=0)
 
     def __str__(self):
         return self.name
@@ -45,61 +46,52 @@ class Product(models.Model):
         product_variants = ProductVariant.objects.filter(product=self)
         for variant in product_variants:
             variant.update_price_with_offer(offer_percentage)
+            variant.save()
 
     def remove_offer(self):
         self.offer_percentage = None
         self.save()
         product_variants = ProductVariant.objects.filter(product=self)
         for variant in product_variants:
-            variant.restore_original_prices()
+            variant.update_price_with_offer(0)
+            variant.save()
 
 
 class ProductVariant(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     variant =models.CharField(max_length=50)
     price = models.IntegerField()
-    price_befor_offer = models.IntegerField(default=0)
+    price_after_offer = models.IntegerField(default=0)
     stock = models.PositiveIntegerField(default=1)
     def __str__(self):
         return f'{self.product.name} - {self.variant} - {self.price}'
 
     def update_price_with_offer(self, offer_percentage):
         original_price = self.price
-        self.price_befor_offer =original_price
-        discounted_price = original_price - (original_price * offer_percentage / 100)
-        self.price = discounted_price
+        if offer_percentage > 0:
+            discounted_price = original_price - (original_price * offer_percentage / 100)
+            self.price_after_offer = discounted_price
+        else:
+            self.price_after_offer = original_price
         self.save()
 
     def restore_original_prices(self):
         original_price = self.price_befor_offer
         self.price = original_price
         self.save()
-
+    def set_price(self, new_price):
+        self.price = new_price
+        self.update_price_with_offer(self.product.offer_percentage)
+        self.save()
+        
 class Image(models.Model):
     image = models.ImageField(upload_to='products/')
     product = models.ForeignKey(Product, on_delete=models.CASCADE, null=True, blank=True, related_name='images', default=None)
-
+    
+    
     def __str__(self):
         return self.image.name
 
-# class ProductAttribute(models.Model):
-#     product=models.ForeignKey(Product,on_delete=models.CASCADE)
-#     color=models.ForeignKey(Color,on_delete=models.CASCADE)
-#     size=models.ForeignKey(Variant,on_delete=models.CASCADE)
-#     price=models.PositiveIntegerField(default=0)
-#     image=models.ImageField(upload_to="product_imgs/",null=True)
-
-#     class Meta:
-#         verbose_name_plural='7. ProductAttributes'
-
-#     def __str__(self):
-#         return self.product.title
-
-#     def image_tag(self):
-#         return mark_safe('<img src="%s" width="50" height="50" />' % (self.image.url))
-
-
-    
 class offer(models.Model):
     coupen= models.CharField(max_length=15)
     description = models.CharField(max_length=50)
@@ -155,7 +147,7 @@ class NewCartItem(models.Model):
     
     @property
     def get_total_price(self):
-        return self.variant.price * self.quantity
+        return self.variant.price_after_offer * self.quantity
     
 
 
@@ -183,7 +175,7 @@ TYPE_CHOICES = (
     ('Cash on delivery', 'Cash on delivery'),
     ('Online Payment', 'Online Payment'),
     ('Razorpay', 'Razorpay'),
-    ('Paid From Your Wallet','Paid From Your Wallet')
+    ('Wallet','Wallet')
 )
 class Address(models.Model):
     user = models.ForeignKey(UserDetail, on_delete=models.CASCADE)
@@ -208,9 +200,15 @@ class Order(models.Model):
     ordertype = models.CharField(max_length=50, choices=TYPE_CHOICES, default='Cash on delivery')
     status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='Pending')
     variant=models.CharField(max_length=50, null=True)
+    quantity = models.PositiveIntegerField(default=1)
 
     def __str__(self):
         return str(self.id)
+    def save(self, *args, **kwargs):
+        # Calculate the discounted amount based on the variant price and quantity
+        self.amount = self.variant.price_after_offer * self.quantity
+        super().save(*args, **kwargs)  
+         
 class Wishlist(models.Model):
     user = models.ForeignKey(UserDetail, on_delete=models.CASCADE,default=None)
     product = models.ForeignKey(Product,  on_delete=models.CASCADE,default=None)
@@ -244,18 +242,19 @@ class Banner(models.Model):
 class Wallet(models.Model):
     user = models.ForeignKey(UserDetail, on_delete=models.CASCADE)
     balance = models.DecimalField(max_digits=10, decimal_places=2)
+    
 
-    def deposit(self, amount):
+    def deposit(self, amount,type):
         self.balance += Decimal(str(amount))
         self.save()
-        transaction = Transaction(wallet=self, amount=amount)
+        transaction = Transaction(wallet=self, amount=amount,type=type)
         transaction.save()
 
-    def withdraw(self, amount):
+    def withdraw(self, amount,type):
         if self.balance >= amount:
             self.balance -= Decimal(str(amount))
             self.save()
-            transaction = Transaction(wallet=self, amount=-amount)
+            transaction = Transaction(wallet=self, amount=-amount,type=type)
             transaction.save()
         else:
             raise Exception("Insufficient balance")
@@ -279,6 +278,6 @@ class Transaction(models.Model):
     wallet = models.ForeignKey(Wallet, on_delete=models.CASCADE)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     timestamp = models.DateTimeField(auto_now_add=True)
-
+    type = models.CharField(max_length=200,null=True,default='Transfer')
     def __str__(self):
-        return f"Transaction ID: {self.id} | Wallet: {self.wallet} | Amount: {self.amount} | Timestamp: {self.timestamp}"
+        return f"Transaction ID: {self.id} | Wallet: {self.wallet} | Amount: {self.amount} | Timestamp: {self.timestamp} | Type:{self.type}"

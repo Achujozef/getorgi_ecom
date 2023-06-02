@@ -1,199 +1,211 @@
 {% extends "theme.html" %}
 {% load static %}
 {% block content %}
+<style>
+  .table.custom-table {
+    width: 100%;
+    border-collapse: collapse;
+}
 
+.table.custom-table th,
+.table.custom-table td {
+    padding: 15px;
+    border: 1px solid #ddd;
+}
+
+.table.custom-table thead th {
+    background-color: #f7f7f7;
+    color: #333;
+}
+
+.table.custom-table .order-id,
+.table.custom-table .order-date,
+.table.custom-table .product-thumbnail,
+.table.custom-table .order-details,
+.table.custom-table .address,
+.table.custom-table .order-amount,
+.table.custom-table .order-type,
+.table.custom-table .order-status,
+.table.custom-table .order-action {
+    vertical-align: middle;
+}
+
+.table.custom-table .product-thumbnail img {
+    max-width: 100px;
+    height: auto;
+}
+
+.table.custom-table .address-name b {
+    font-size: 16px;
+}
+
+.table.custom-table .address-details {
+    color: #888;
+    margin-bottom: 5px;
+}
+
+.table.custom-table .address-zipcode {
+    color: #888;
+    font-size: 14px;
+}
+
+.table.custom-table .order-status .progress {
+    height: 10px;
+    margin-bottom: 0;
+}
+
+.table.custom-table .order-status .progress-bar {
+    border-radius: 2px;
+}
+
+.table.custom-table .order-action a {
+    margin-right: 10px;
+}
+
+.table.custom-table .order-action .text-black {
+    color: #333;
+}
+
+.table.custom-table .order-action p {
+    margin-bottom: 0;
+}
+
+.site-block-27 {
+    margin-top: 30px;
+}
+
+.site-block-27 ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: inline-block;
+}
+
+.site-block-27 ul li {
+    display: inline-block;
+    margin: 0;
+}
+
+.site-block-27 ul li a,
+.site-block-27 ul li span {
+    display: inline-block;
+    padding: 8px 15px;
+    color: #333;
+    background-color: #f7f7f7;
+    border: 1px solid #ddd;
+    text-decoration: none;
+    line-height: 1;
+}
+
+.site-block-27 ul li.active span {
+    background-color: #333;
+    color: #fff;
+    border-color: #333;
+}
+
+</style>
     <div class="bg-light py-3">
-      <div class="container">
-        <div class="row">
-          {% comment %} <div class="col-md-12 mb-0"><a href="{% url '/' %}">Home</a> <span class="mx-2 mb-0">/</span> <strong class="text-black">Order</strong></div> {% endcomment %}
+        <div class="container">
+            <div class="row">
+                <!-- Removed the breadcrumb section -->
+            </div>
         </div>
-      </div>
     </div>
 
     <div class="site-section">
-      <div class="container">
-        <div class="row mb-5">
-          <form class="col-md-12" method="post">
-            <div class="site-blocks-table">
-              
-              <table class="table table-bordered">
-                <thead>
-                  <tr>
-                    <th class="product-thumbnail">Order ID</th>
-                    <th class="product-name">Date</th>
-                    <th class="product-price">Image</th>
-                    
-                    <th class="product-quantity">Order Details</th>
-                    <th class="product-quantity">Address</th>
-                    <th class="product-quantity">Amount</th>
-                    <th class="product-total">Order Type</th>
-                    <th class="product-total">Status</th>
-                    <th class="product-total">Action</th>
-                  
-
-                  </tr>
-                </thead>
-                <tbody>
-               
-                  {% for i in page_obj %}
-                  <tr>
-                    <td class="product-name">
-                      <h2 class="h6 text-black">{{i.id}}</h2>
-                    </td>
-                    <td>{{i.ordered_date}}</td>
-                    <td class="product-thumbnail">
-                      {% if i.product.images.all %}
-                      {% with i.product.images.all|first as img %}
-                      <img class="img-fluid w-100"  style="max-width: 100px;" src="{{ img.image.url }}" alt="{{ i.name }}">
-                      {% endwith %}
-                      {% endif %}
-                    </td>
-                    <td>{{i.variant}} </td>
-                 
-                    <td><b>{{i.address.name}}</b><br>{{i.address.housename}}<br>PIN:{{i.address.zipcode}}</td>
-                    <td><b>{{i.amount}}</b></td>
-                    <td><b>{{i.ordertype}}</b></td>
-                    
-                    <td>
-
-                      <p>{{i.status}}</p>
-
-                      {% if i.status == "Accepted" %}
-                      <div class="progress">
-                          <div class="progress-bar" role="progressbar" style="width: 20%" aria-valuenow="20"
-                               aria-valuemin="0" aria-valuemax="100"></div>
-                      </div>
-  
-                      {% elif i.status == "Packed" %}
-                      <div class="progress">
-                          <div class="progress-bar bg-info" role="progressbar" style="width: 40%" aria-valuenow="40"
-                               aria-valuemin="0" aria-valuemax="100"></div>
-                      </div>
-                      
-  
-                      {% elif i.status == "On the way" %}
-                      <div class="progress">
-                          <div class="progress-bar bg-warning" role="progressbar" style="width: 70%" aria-valuenow="70"
-                               aria-valuemin="0" aria-valuemax="100"></div>
-                      </div>
-                      
-  
-                      {% elif i.status == "Delivered" %}
-                      <div class="progress">
-                          <div class="progress-bar bg-success" role="progressbar" style="width: 100%" aria-valuenow="100"
-                               aria-valuemin="0" aria-valuemax="100"></div>
-                      </div>
-  
-                      {% elif i.status == "Cancel Requested" %}
-                      <div class="progress">
-                          <div class="progress-bar bg-danger" role="progressbar" style="width: 100%" aria-valuenow="100"
-                               aria-valuemin="0" aria-valuemax="100"></div>
-                      </div>
-
-                      {% elif i.status == "Return Requested" %}
-                      <div class="progress">
-                          <div class="progress-bar bg-danger" role="progressbar" style="width: 100%" aria-valuenow="100"
-                               aria-valuemin="0" aria-valuemax="100"></div>
-                      </div>
-                      {% elif i.status == "Returned" %}
-                      <div class="progress">
-                          <div class="progress-bar bg-danger" role="progressbar" style="width: 100%" aria-valuenow="100"
-                               aria-valuemin="0" aria-valuemax="100"></div>
-                      </div>
-                      {% elif i.status == "Cancelled" %}
-                      <div class="progress">
-                          <div class="progress-bar bg-danger" role="progressbar" style="width: 100%" aria-valuenow="100"
-                               aria-valuemin="0" aria-valuemax="100"></div>
-                      </div>
-                      {% endif %}
-
-
-                    </td>
-
-                    <td>
-
-                      {% if i.status == "Pending" or i.status == "Packed" or i.status == "Accepted" or i.status == "On the way" %}
-                      <a href="{% url 'cancelorder' id=i.id %}" class="my-link1" class="btn btn-sm btn-secondary mr-3 mb-2 remove-cart"><b>Cancel</b></a>
-                      {% elif i.status == "Delivered" %}
-                      <a href="{% url 'returnorder' id=i.id %}" class="my-link2" class="btn btn-sm btn-secondary mr-3 mb-2 remove-cart"><b>Return</b></a><br>
-                      <b class="text-black">or </b><br>
-                      <a href="{% url 'generateinvoice' %}?ord_id={{i.id}}"><b>Download Invoice</b></a>
-                      {% elif i.status == "Return Requested" %}
-                      <p><b>Requested.</b></p>
-                      {% elif i.status == "Cancel Requested" %}
-                      <p><b>Requested.</b></p>
-                      {% elif i.status == "Cancelled" or i.status == "Returned"  %}
-                      <p><b>---</b></p>
-                      {% else %}
-                      <p><b>---</b></p>
-                      {% endif %}
-
-
-                    </td>
-
-                    
-
-                  </tr>
-
-            
-                  {% endfor %}
-
-
-                </tbody>
-              </table>
+        <div class="container">
+            <div class="row mb-5">
+                <form class="col-md-12" method="post">
+                    <div class="table-responsive">
+                        <table class="table custom-table">
+                            <thead>
+                                <tr>
+                                    <th>Order ID</th>
+                                    <th>Date</th>
+                                    <th>Image</th>
+                                    <th>Order Details</th>
+                                    <th>Address</th>
+                                    <th>Amount</th>
+                                    <th>Order Type</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for i in page_obj %}
+                                <tr>
+                                    <td class="order-id">{{ i.id }}</td>
+                                    <td class="order-date">{{ i.ordered_date|date:"d F Y" }}</td>
+                                    <td class="product-thumbnail">
+                                        {% if i.product.images.all %}
+                                        {% with i.product.images.all|first as img %}
+                                        <img class="img-fluid" style="max-width: 100px;" src="{{ img.image.url }}" alt="{{ i.name }}">
+                                        {% endwith %}
+                                        {% endif %}
+                                    </td>
+                                    <td class="order-details">{{ i.variant }} X {{ i.quantity }}</td>
+                                    <td class="address">
+                                        <div class="address-name"><b>{{ i.address.name }}</b></div>
+                                        <div class="address-details">{{ i.address.housename }}</div>
+                                        <div class="address-zipcode">PIN: {{ i.address.zipcode }}</div>
+                                    </td>
+                                    <td class="order-amount"><b>{{ i.amount }}</b></td>
+                                    <td class="order-type"><b>{{ i.ordertype }}</b></td>
+                                    <td class="order-status">
+                                        <div class="progress">
+                                            <div class="progress-bar {% if i.status == 'Accepted' %}bg-primary{% elif i.status == 'Packed' %}bg-info{% elif i.status == 'On the way' %}bg-warning{% elif i.status == 'Delivered' %}bg-success{% elif i.status == 'Cancel Requested' or i.status == 'Return Requested' or i.status == 'Returned' or i.status == 'Cancelled' %}bg-danger{% endif %}" role="progressbar" style="width: {% if i.status == 'Accepted' %}20{% elif i.status == 'Packed' %}40{% elif i.status == 'On the way' %}70{% elif i.status == 'Delivered' %}100{% else %}0{% endif %}%"></div>
+                                        </div>
+                                        <p>{{ i.status }}</p>
+                                    </td>
+                                    <td class="order-action">
+                                        {% if i.status == 'Pending' or i.status == 'Packed' or i.status == 'Accepted' or i.status == 'On the way' %}
+                                        <a href="{% url 'cancelorder' id=i.id %}" class="btn btn-sm btn-secondary mr-3 mb-2 remove-cart"><b>Cancel</b></a>
+                                        {% elif i.status == 'Delivered' %}
+                                        <a href="{% url 'returnorder' id=i.id %}" class="btn btn-sm btn-secondary mr-3 mb-2 remove-cart"><b>Return</b></a><br>
+                                        <b class="text-black">or</b><br>
+                                        <a href="{% url 'generateinvoice' %}?ord_id={{i.id}}"><b>Download Invoice</b></a>
+                                        {% elif i.status == 'Return Requested' or i.status == 'Cancel Requested' %}
+                                        <p><b>Requested</b></p>
+                                        {% else %}
+                                        <p><b>---</b></p>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </form>
             </div>
-          </form>
-        </div>
 
-        <div class="row">
-          <div class="col-md-6">
-            <!--
-            -->
-          </div>
-          <div class="col-md-6 pl-5">
-            <!--
-
-            -->
-          </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <!-- Content for the left side of the table -->
+                </div>
+                <div class="col-md-6 pl-5">
+                    <!-- Content for the right side of the table -->
+                </div>
+            </div>
         </div>
-      </div>
     </div>
 
-                                            <!-- User side pagination links -->
-
-                                              <div class="row" data-aos="fade-up">
-                                                
-                                                <div class="col-md-12 text-center">
-                                                  <div class="site-block-27">
-                                                    <ul>
-
-                                                      {% if page_obj.has_previous %}
-                                                      
-                                                      <!--
-                                                      <li><a href="?page=1">first</a></li>
-                                                      -->
-                                                      
-                                                      
-                                                      <li><a href="?page={{ page_obj.previous_page_number }}">&lt;</a></li>
-                                                      {% endif %}
-                                       
-                                                      <li class="active"><span>{{ page_obj.number }}</span></li>
-                                                      {% if page_obj.has_next %}
-                                                      <li><a href="?page={{ page_obj.next_page_number }}">&gt;</a></li>
-                                                      
-                                                      <!--
-                                                      <li><a href="?page={{ page_obj.paginator.num_pages }}">last</a></li>
-                                                      -->
-                                                      
-                                                      {% endif %}
-
-                                                    </ul>
-                                                  </div>
-                                                </div>
-                                                
-                                              </div>
-                                              <br>
-                                              
-
-  {% endblock %}
-
+    <div class="row" data-aos="fade-up">
+        <div class="col-md-12 text-center">
+            <div class="site-block-27">
+                <ul>
+                    <!-- Pagination links -->
+                    {% if page_obj.has_previous %}
+                    <li><a href="?page=1">first</a></li>
+                    <li><a href="?page={{ page_obj.previous_page_number }}">&lt;</a></li>
+                    {% endif %}
+                    <li class="active"><span>{{ page_obj.number }}</span></li>
+                    {% if page_obj.has_next %}
+                    <li><a href="?page={{ page_obj.next_page_number }}">&gt;</a></li>
+                    <li><a href="?page={{ page_obj.paginator.num_pages }}">last</a></li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </div>
+    <br>
+{% endblock %}

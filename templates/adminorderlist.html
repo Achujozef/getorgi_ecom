@@ -76,7 +76,7 @@
                     <td>{{ order.id }}</td>
                     <td>{{ order.user.uname }}</td>
                     <td>{{ order.product }}</td>
-                    <td>{{ order.ordered_date }}</td>
+                    <td><p>{{ order.ordered_date|date:"d F Y" }}</p></td>
                     <td>{{ order.amount }}</td>
                     <td>{{ order.ordertype }}</td>
                     <td>{{ order.status }}</td>
