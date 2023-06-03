@@ -1682,7 +1682,7 @@ def adminbannerlist(request):
             member=Banner.objects.all().order_by('-id')
         return render(request,'adminbannerlist.html',{'member': member})
     else:
-        return render(request, 'admi_nlogin.html')
+        return render(request, 'admin_login.html')
     
 def updatebanner(request):
     if 'username' in request.session:
