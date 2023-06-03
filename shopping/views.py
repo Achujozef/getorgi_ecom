@@ -959,22 +959,13 @@ def checkout(request):
                     return render(request, 'checkout.html', {'fm': fm})
             elif 'couponform' in request.POST:
                 if 'code' in request.session:
-                   del request.session['code']
+                    del request.session['code']
                 check = request.POST.get('c_code')
-                request.session['code']=check
-                minimum_amount = Coupon.objects.get(is_active=True,coupon_code=check).minimum_amount
+                request.session['code'] = check
 
                 if not check:
                     messages.warning(request, 'Please enter a coupon code')
                     return redirect('checkout')
-
-                if minimum_amount > 0:
-                    # Check if the order total is less than the minimum amount
-                    ret = itemcalculate(request.session['username'])
-                    total = ret['datap']['total']
-                    if total < minimum_amount:
-                        messages.warning(request, f'Total amount must be greater than or equal to {minimum_amount}')
-                        return redirect('checkout')
 
                 try:
                     obj = Coupon.objects.get(coupon_code=check, is_active=True)
@@ -982,20 +973,20 @@ def checkout(request):
                     messages.warning(request, 'Invalid coupon')
                     return redirect('checkout')
 
-            if obj.applied:
-                messages.warning(request, 'Coupon already applied')
-                return redirect('checkout')
-            else:
-                obj.applied = True
-                obj.save()
+                if obj.applied:
+                    messages.warning(request, 'Coupon already applied')
+                    return redirect('checkout')
+                else:
+                    obj.applied = True
+                    obj.save()
 
-                # Recalculate the total price after applying the discount
-                ret = itemcalculate(request.session['username'])
-                disc = ret['datap']['total']
-                applied_discount = disc - obj.discount_price
-            
-                messages.success(request, 'Coupon applied successfully')
-                return redirect('checkout')
+                    # Recalculate the total price after applying the discount
+                    ret = itemcalculate(request.session['username'])
+                    disc = ret['datap']['total']
+                    applied_discount = disc - obj.discount_price
+
+                    messages.success(request, 'Coupon applied successfully')
+                    return redirect('checkout')
 
         else:
             fm = UserAddressForm()
@@ -1004,20 +995,20 @@ def checkout(request):
             wallet = Wallet.objects.get(user=user)
             balance = wallet.balance
             if 'code' in request.session:
-                code=request.session['code']
+                code = request.session['code']
             context = Address.objects.filter(user__uname=use).order_by('-id')
 
             try:
-                coup = Coupon.objects.get(is_active=True,coupon_code=code, applied=True)
-
+                coup = Coupon.objects.get(is_active=True, coupon_code=code, applied=True)
                 # Calculate the initial total price before applying any coupon
                 ret = itemcalculate(use)
                 disc = ret['datap']['total']
 
                 # Calculate the discounted price after applying the coupon
                 applied_discount = disc - coup.discount_price
-                request.session['code_amt']=coup.discount_price
+                request.session['code_amt'] = coup.discount_price
             except Coupon.DoesNotExist:
+                # messages.warning(request, 'Invalid coupon')
                 coup = None
                 ret = itemcalculate(use)
                 disc = ret['datap']['total']
@@ -1031,9 +1022,9 @@ def checkout(request):
             if disc <= 0:
                 messages.warning(request, 'Order total is less than or equal to zero')
                 return redirect('cart')
-            
+
             coupon = Coupon.objects.filter(is_active=True)
-            
+
             return render(request, 'checkout.html', {'fm': fm, 'context': context, 'data': ret['data'],
                                                      'datap': ret['datap'], 'coup': coup,
                                                      'disc': applied_discount, 'coupon': coupon,
