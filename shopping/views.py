@@ -1468,7 +1468,7 @@ def cancelcoupon(request):
 
 
 def admincouponlist(request):
-    if 'username' in request.session:
+    if 'adusername' in request.session:
         if 'search' in request.GET:
             search=request.GET['search']
             member=Coupon.objects.filter(coupon_code__icontains=search)
@@ -1479,7 +1479,7 @@ def admincouponlist(request):
         return render(request, 'admin_login.html')
     
 def adminaddcoupon(request):
-    if 'username' in request.session:       
+    if 'adusername' in request.session:       
         if request.method == 'POST':
             fm = CouponForm(request.POST,request.FILES)
             if fm.is_valid():
@@ -1498,7 +1498,7 @@ def adminaddcoupon(request):
         return render(request, 'admin_login.html')
 
 def deletecoupon(request):
-    if 'username' in request.session:
+    if 'adusername' in request.session:
         uid=request.GET['uid']
         Coupon.objects.filter(id=uid).delete()
         return redirect('admincouponlist')
@@ -1506,7 +1506,7 @@ def deletecoupon(request):
         return redirect('admin_login')
 
 def updatecoupon(request):
-    if 'username' in request.session:
+    if 'adusername' in request.session:
         uid = request.GET['uid']
         cat = Coupon.objects.get(id=uid)
         if request.method == 'POST':
@@ -1674,7 +1674,7 @@ def generateinvoice(request):
     return response
 
 def adminbannerlist(request):
-    if 'username' in request.session:
+    if 'adusername' in request.session:
         if 'search' in request.GET:
             search=request.GET['search']
             member=Banner.objects.filter(name__icontains=search)
@@ -1685,7 +1685,7 @@ def adminbannerlist(request):
         return render(request, 'admin_login.html')
     
 def updatebanner(request):
-    if 'username' in request.session:
+    if 'adusername' in request.session:
         uid = request.GET['uid']
         cat = Banner.objects.get(id=uid)
         if request.method == 'POST':
@@ -1700,7 +1700,7 @@ def updatebanner(request):
         return redirect('admin_login')
 
 def adminaddbanner(request): 
-    if 'username' in request.session:
+    if 'adusername' in request.session:
         if request.method == 'POST':
             fm = BannerForm(request.POST, request.FILES)
             if fm.is_valid():
@@ -1715,7 +1715,7 @@ def adminaddbanner(request):
         return redirect('admin_login')
     
 def deletebanner(request):
-    if 'username' in request.session:
+    if 'adusername' in request.session:
         uid=request.GET['uid']
         Banner.objects.filter(id=uid).delete()
         return redirect('adminbannerlist')
