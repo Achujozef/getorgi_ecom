@@ -957,6 +957,8 @@ def checkout(request):
                     messages.warning(request,'Enter correct address') 
                     return render(request, 'checkout.html', {'fm': fm})
             elif 'couponform' in request.POST:
+                if 'code' in request.session:
+                   del request.session['code']
                 check = request.POST.get('c_code')
                 request.session['code']=check
                 minimum_amount = Coupon.objects.get(is_active=True,coupon_code=check).minimum_amount
