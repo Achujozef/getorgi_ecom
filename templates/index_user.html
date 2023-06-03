@@ -114,101 +114,93 @@
   <div class="site-section">
     <div class="container">
       <br>
-<br>
-<h5 style="font-family: 'Arial', sans-serif;">Select Categories</h5>
+      <br>
+      <h5 style="font-family: 'Arial', sans-serif;">Select Categories</h5>
 
-<div class="row mb-6">
-  <div class="col-md-12">
-    <div class="row">
-      {% for i in cat %}
-        <div class="col-md-auto mb-4">
-          <div class="card border-0 d-inline-block shadow category-card">
-            <div class="card-body text-nowrap">
-              <div class="category-card-content">
-                {% if i.offer_percentage %}
-                  <img class="offer-image" src="{% static 'img/catoffer.png' %}" alt="Offer">
-                {% endif %}
-                <a style="font-family: 'Arial', sans-serif;" class="mb-3 h6 text-uppercase text-black category-card-link small" href="{% url 'shop' %}?cat_id={{ i.id }}">{{ i.name }}</a>
+      <div class="row mb-6">
+        <div class="col-md-12">
+          <div class="row">
+            {% for i in cat %}
+            <div class="col-md-auto mb-4">
+              <div class="card border-0 d-inline-block shadow category-card">
+                <div class="card-body text-nowrap">
+                  <div class="category-card-content">
+                    {% if i.offer_percentage %}
+                    <img class="offer-image" src="{% static 'img/catoffer.png' %}" alt="Offer">
+                    {% endif %}
+                    <a style="font-family: 'Arial', sans-serif;" class="mb-3 h6 text-uppercase text-black category-card-link small" href="{% url 'shop' %}?cat_id={{ i.id }}">{{ i.name }}</a>
+                  </div>
+                </div>
               </div>
             </div>
+            {% endfor %}
           </div>
         </div>
-      {% endfor %}
-    </div>
-  </div>
-</div>
-
-
-
-
-
-
-
-<div class="row mb-6 justify-content-center">
-  <div class="col-md-12">
-    <div class="row">
-      <div class="col-md-12 mb-5">
-        <h2 style="font-family: 'Arial', sans-serif;" class="text-black h5">Products</h2>
       </div>
-    </div>
-    <div class="row mb-5">
-      {% for i in page_obj %}
-      <div class="col-sm-6 col-lg-2 mb-4">
-        <div class="card product-card border-0">
-          {% if i.images.all %}
-            {% with i.images.all|first as img %}
-              <img class="card-img-top rounded" src="{{ img.image.url }}" alt="{{ product.name }}">
-            {% endwith %}
-          {% endif %}
-          
-          <div class="card-body">
-            <h5 class="card-title product-name">
-              <a href="{% url 'shopsingle' %}?uid={{ i.id }}">{{ i.name }}</a>
-            </h5>
-            <span style="font-size: smaller;">Free Delivery</span><br>
-            {% if i.offer_percentage %}
-              <span style="font-size: smaller;">{{ i.offer_percentage }}% Off</span>
-            {%else%}
-            <span style="font-size: smaller;">Check Offer</span>
+
+      <div class="row mb-6 justify-content-center">
+        <div class="col-md-12">
+          <div class="row">
+            <div class="col-md-12 mb-5">
+              <h2 style="font-family: 'Arial', sans-serif;" class="text-black h5">Products</h2>
+            </div>
+          </div>
+          <div class="row mb-5">
+            {% for i in page_obj %}
+            <div class="col-sm-6 col-lg-2 mb-4">
+              <div class="card product-card border-0">
+                {% if i.images.all %}
+                {% with i.images.all|first as img %}
+                <img class="card-img-top rounded" src="{{ img.image.url }}" alt="{{ product.name }}">
+                {% endwith %}
+                {% endif %}
+
+                <div class="card-body">
+                  <h5 class="card-title product-name">
+                    <a href="{% url 'shopsingle' %}?uid={{ i.id }}">{{ i.name }}</a>
+                  </h5>
+                  <span style="font-size: smaller;">Free Delivery</span><br>
+                  {% if i.offer_percentage %}
+                  <span style="font-size: smaller;">{{ i.offer_percentage }}% Off</span>
+                  {% else %}
+                  <span style="font-size: smaller;">Check Offer</span>
+                  {% endif %}
+
+                  <div class="d-flex justify-content-between">
+                    <a href="{% url 'shopsingle' %}?uid={{ i.id }}" class="btn btn-primary">View</a>
+                    <a href="{% url 'wishlist' %}?wish_id={{ i.id }}" class="btn btn-outline-primary "><i class="fas fa-heart"></i></a>
+                  </div>
+
+                </div>
+              </div>
+            </div>
+            {% if forloop.counter|divisibleby:6 %}
+          </div>
+          <div class="row mb-5">
             {% endif %}
-           
-            <div class="d-flex justify-content-between">
-              <a href="{% url 'shopsingle' %}?uid={{ i.id }}" class="btn btn-primary">View</a>
-              <a href="{% url 'wishlist' %}?wish_id={{ i.id }}" class="btn btn-outline-primary "><i class="fas fa-heart"></i></a>
-            </div>
-            
+            {% endfor %}
           </div>
         </div>
       </div>
-      {% if forloop.counter|divisibleby:6 %}
-        </div>
-        <div class="row mb-5">
-      {% endif %}
-      {% endfor %}
-    </div>
-  </div>
-</div>
 
-          <div class="row" data-aos="fade-up">
-            <div class="col-md-12 text-center">
-              <nav aria-label="Page navigation">
-                <ul class="pagination justify-content-center">
-                  {% if page_obj.has_previous %}
-                    <li class="page-item"><a class="page-link pagination" href="?page={{ page_obj.previous_page_number }}">&lt;</a></li>
-                  {% else %}
-                    <li class="page-item disabled"><a class="page-link" href="#">&lt;</a></li>
-                  {% endif %}
-                  <li class="page-item active"><a class="page-link" href="#">{{ page_obj.number }}</a></li>
-                  {% if page_obj.has_next %}
-                    <li class="page-item"><a class="page-link pagination" href="?page={{ page_obj.next_page_number }}">&gt;</a></li>
-                  {% else %}
-                    <li class="page-item disabled"><a class="page-link" href="#">&gt;</a></li>
-                  {% endif %}
-                </ul>
-              </nav>
-              
-            </div>
-          </div>
+      <div class="row" data-aos="fade-up">
+        <div class="col-md-12 text-center">
+          <nav aria-label="Page navigation">
+            <ul class="pagination justify-content-center">
+              {% if page_obj.has_previous %}
+              <li class="page-item"><a class="page-link pagination" href="?page={{ page_obj.previous_page_number }}">&lt;</a></li>
+              {% else %}
+              <li class="page-item disabled"><a class="page-link" href="#">&lt;</a></li>
+              {% endif %}
+              <li class="page-item active"><a class="page-link" href="#">{{ page_obj.number }}</a></li>
+              {% if page_obj.has_next %}
+              <li class="page-item"><a class="page-link pagination" href="?page={{ page_obj.next_page_number }}">&gt;</a></li>
+              {% else %}
+              <li class="page-item disabled"><a class="page-link" href="#">&gt;</a></li>
+              {% endif %}
+            </ul>
+          </nav>
+
         </div>
       </div>
     </div>

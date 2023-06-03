@@ -312,7 +312,8 @@ def add_variant_prod(request, product_id):
             messages.error(request, 'Variant stock should be a non-negative integer.')
 
         if not messages.get_messages(request):
-            ProductVariant.objects.create(product=product, variant=variant_name, price=variant_price, stock=variant_stock)
+            variant=ProductVariant.objects.create(product=product, variant=variant_name, price=variant_price, stock=variant_stock)
+            variant.set_price(int(variant_price))
             messages.success(request, 'Variant added successfully.')
             return redirect('admin_page')
 
@@ -1130,7 +1131,7 @@ def orderconfirm(request):
             variant = c.variant
             variant.stock -= c.quantity
             variant.save()
-            Order(user=use1,address=use2,variant=c.variant, product=c.product,quantity=c.quantity, amount=c.get_total_price-(code_amt/cartcount)).save()
+            Order(user=use1,address=use2,variant=c.variant, product=c.product,quantity=c.quantity, amount=c.get_total_price).save()
             c.delete() 
             
         return render(request,'orderconfirm.html')
@@ -1373,21 +1374,23 @@ def addprofileaddress(request):
 def wishlist(request):
     if 'username' in request.session:
         wish_id = request.GET.get('wish_id')
+        username = request.session['username']
+        user = UserDetail.objects.get(uname=username)
         if wish_id is not None:
             wish_product = Product.objects.get(id=wish_id)
-            dup = Wishlist.objects.filter(product__name=wish_product.name).first()
+            dup = Wishlist.objects.filter(user=user,product__name=wish_product.name).first()
             if dup is None:
                 product = Product.objects.get(id=wish_id)
                 use1 = request.session['username']
                 use2 = UserDetail.objects.get(uname=use1)
                 wish = Wishlist(user=use2,product=product)
                 wish.save()
-                wish_items = Wishlist.objects.all().order_by('-id')
+                wish_items = Wishlist.objects.filter(user=user).order_by('-id')
             else:
                 messages.warning(request,'Item is already in the wishlist')
-                wish_items = Wishlist.objects.all().order_by('-id')
+                wish_items = Wishlist.objects.filter(user=user).order_by('-id')
         else:
-            wish_items = Wishlist.objects.all().order_by('-id')
+            wish_items = Wishlist.objects.filter(user=user).order_by('-id')
         if wish_items.exists():
             return render(request,'wishlist.html',{'wish_items':wish_items})
         else:
@@ -1450,7 +1453,10 @@ def razorpay(request):
                 return redirect('checkout')
             cart = NewCartItem.objects.filter(cart__user__uname=use1)
             for c in cart:
-                Order(user=use1, address=use2, product=c.product, amount=c.get_total_price, ordertype= 'Razorpay').save()
+                variant = c.variant
+                variant.stock -= c.quantity
+                variant.save()
+                Order(user=user, address=use2, product=c.product, amount=c.get_total_price,variant=c.variant, ordertype= 'Wallet').save()
                 c.delete()
             return render(request,'orderconfirm.html')
         else:

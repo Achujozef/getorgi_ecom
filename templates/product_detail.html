@@ -158,16 +158,16 @@
         <div>
           <p>{{product.description}}</p>
         </div>
-        {% if category_offer_percentage or product.offer_percentage %}
+        {% comment %} {% if category_offer_percentage or product.offer_percentage %}
         <div class="offer-info">
           {% if category_offer_percentage %}
             <h1>Now: {{ category_offer_percentage }}% Off </h1>
-          {% endif %}
-          {% if product.offer_percentage %}
+          {% else %}
+          
             <h1>Now: {{ product.offer_percentage }}% Off </h1>
           {% endif %}
         </div>
-      {% endif %}
+      {% endif %} {% endcomment %}
         {% if variants %}
           <div class="product-variants">
             <form method="post" action="{% url 'add_to_cart' %}">

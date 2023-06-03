@@ -36,7 +36,7 @@ class Product(models.Model):
     category = models.ForeignKey(Category, on_delete=models.CASCADE,  null=True)
     normalprice = models.IntegerField(default=0)
     listed = models.BooleanField(default=True)
-    offer_percentage = models.IntegerField(default=0)
+    offer_percentage = models.IntegerField(default=0,null=True)
 
     def __str__(self):
         return self.name
@@ -49,7 +49,7 @@ class Product(models.Model):
             variant.save()
 
     def remove_offer(self):
-        self.offer_percentage = None
+        self.offer_percentage = 0
         self.save()
         product_variants = ProductVariant.objects.filter(product=self)
         for variant in product_variants:
@@ -76,8 +76,8 @@ class ProductVariant(models.Model):
         self.save()
 
     def restore_original_prices(self):
-        original_price = self.price_befor_offer
-        self.price = original_price
+        original_price = self.price
+        self.price_after_offer = original_price
         self.save()
     def set_price(self, new_price):
         self.price = new_price
@@ -204,10 +204,10 @@ class Order(models.Model):
 
     def __str__(self):
         return str(self.id)
-    def save(self, *args, **kwargs):
-        # Calculate the discounted amount based on the variant price and quantity
-        self.amount = self.variant.price_after_offer * self.quantity
-        super().save(*args, **kwargs)  
+    # def save(self, *args, **kwargs):
+    #     # Calculate the discounted amount based on the variant price and quantity
+    #     self.amount = self.variant.price_after_offer * self.quantity
+    #     super().save(*args, **kwargs)  
          
 class Wishlist(models.Model):
     user = models.ForeignKey(UserDetail, on_delete=models.CASCADE,default=None)

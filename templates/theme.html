@@ -135,7 +135,8 @@
                         </div>
                       </div>
                     </div>
-                     <a href="" class="nav-item nav-link">Contact Us</a>
+                    
+                
                  </div>
                  <div class="d-none d-lg-flex ms-2">
                   <div class="col-6 col-md-4 order-2 order-md-1 site-search-icon text-left">
@@ -167,6 +168,7 @@
                       <p>Please log in to access this feature</p>
                       <button class="login-btn">Log In</button>
                     </div>
+                    
                  </div>
              </div>
              
@@ -191,7 +193,7 @@
           <div class="row g-5">
               <div class="col-lg-3 col-md-6">
                   <h1 class="fw-bold text-primary mb-4">Get<span class="text-secondary">O</span>rgi</h1>
-                  <p>Diam dolor diam ipsum sit. Aliqu diam amet diam et eos. Clita erat ipsum et lorem et sit, sed stet lorem sit clita</p>
+                  <p></p>
                   <div class="d-flex pt-2">
                       <a class="btn btn-square btn-outline-light rounded-circle me-1" href=""><i class="fab fa-twitter"></i></a>
                       <a class="btn btn-square btn-outline-light rounded-circle me-1" href=""><i class="fab fa-facebook-f"></i></a>
@@ -214,15 +216,19 @@
                   <a class="btn btn-link" href="">Support</a>
               </div>
               <div class="col-lg-3 col-md-6">
-                  <h4 class="text-light mb-4">Newsletter</h4>
-                  <p>la ala ala ala ala a.</p>
+                  <h4 class="text-light mb-4"></h4>
+                  <p></p>
                   <div class="position-relative mx-auto" style="max-width: 400px;">
                       
+                    {% if request.session.username %}
+                    <a href="{% url 'user_logout' %}" class="btn btn-danger">Logout</a>
+                {% else %}
+                    <a href="{% url 'user_login' %}" class="btn btn-success">Login</a>
+                {% endif %}
+                    
                      
                      
-                      <a class="btn btn-link" href="{% url 'user_logout'%}">Log Out</a>
-                     
-                      <a class="btn btn-link" href="{% url 'otp_login'%}">Log In</a>
+                      {% comment %} <a class="btn btn-link" href="{% url 'otp_login'%}">Log In</a> {% endcomment %}
                       
                       
                   </div>
