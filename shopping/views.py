@@ -1000,7 +1000,8 @@ def checkout(request):
             user = UserDetail.objects.get(uname=use)
             wallet = Wallet.objects.get(user=user)
             balance = wallet.balance
-            code=request.session['code']
+            if 'code' in request.session:
+                code=request.session['code']
             context = Address.objects.filter(user__uname=use).order_by('-id')
 
             try:
