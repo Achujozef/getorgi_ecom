@@ -592,7 +592,7 @@ def userblock(request):
         #     del request.session['user.username']
         return redirect('user_detail')
     else:
-        return redirect('adminlogin')
+        return redirect('admin_login')
 
 #====================================================================================
 from django.shortcuts import render, get_object_or_404
@@ -1476,7 +1476,7 @@ def admincouponlist(request):
             member=Coupon.objects.all().order_by('-id')
         return render(request,'admincouponlist.html',{'member': member})
     else:
-        return render(request, 'adminlogin.html')
+        return render(request, 'admin_login.html')
     
 def adminaddcoupon(request):
     if 'username' in request.session:       
@@ -1495,7 +1495,7 @@ def adminaddcoupon(request):
             fm = CouponForm()
             return render(request, 'adminaddcoupon.html',{'fm':fm})
     else:
-        return render(request, 'adminlogin.html')
+        return render(request, 'admin_login.html')
 
 def deletecoupon(request):
     if 'username' in request.session:
@@ -1503,7 +1503,7 @@ def deletecoupon(request):
         Coupon.objects.filter(id=uid).delete()
         return redirect('admincouponlist')
     else:
-        return redirect('adminlogin')
+        return redirect('admin_login')
 
 def updatecoupon(request):
     if 'username' in request.session:
@@ -1518,7 +1518,7 @@ def updatecoupon(request):
             fm = CouponForm(instance=cat)
             return render(request, 'adminupdatecoupon.html', {'fm': fm})
     else:
-        return redirect('adminlogin')
+        return redirect('admin_login')
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.units import inch
@@ -1682,7 +1682,7 @@ def adminbannerlist(request):
             member=Banner.objects.all().order_by('-id')
         return render(request,'adminbannerlist.html',{'member': member})
     else:
-        return render(request, 'adminlogin.html')
+        return render(request, 'admi_nlogin.html')
     
 def updatebanner(request):
     if 'username' in request.session:
@@ -1697,7 +1697,7 @@ def updatebanner(request):
             fm = BannerForm(instance=cat)
             return render(request, 'adminupdatebanner.html', {'fm': fm})
     else:
-        return redirect('adminlogin')
+        return redirect('admin_login')
 
 def adminaddbanner(request): 
     if 'username' in request.session:
@@ -1712,7 +1712,7 @@ def adminaddbanner(request):
             fm = BannerForm()
             return render(request, 'adminaddbanner.html', {'fm': fm})
     else:
-        return redirect('adminlogin')
+        return redirect('admin_login')
     
 def deletebanner(request):
     if 'username' in request.session:
@@ -1720,7 +1720,7 @@ def deletebanner(request):
         Banner.objects.filter(id=uid).delete()
         return redirect('adminbannerlist')
     else:
-        return redirect('adminlogin')
+        return redirect('admin_login')
 
 def wallet_balance_view(request):
     username = request.session['username']
