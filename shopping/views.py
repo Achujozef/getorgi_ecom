@@ -1100,7 +1100,8 @@ def order(request):
 def orderconfirm(request):
     if 'username' in request.session:    
         user = request.session['username']
-        code = request.session['code']
+        if 'code' in request.session:
+                code = request.session['code']
         code_amt=request.session['code_amt']
         use1 = UserDetail.objects.get(uname = user)
         try:
