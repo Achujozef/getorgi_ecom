@@ -1419,7 +1419,7 @@ def paypal(request):
         return redirect('user_login')
 
 
-def razorpay(request):
+def razo(request):
     client = razorpay.Client(auth=("rzp_test_fe92PDGUR6EoGd", "FDZuKaPhHQvQnBT4u8rJ9M2e"))
     DATA = {
         "amount": 100 ,
@@ -1538,7 +1538,7 @@ def sales_report(request):
             messages.warning(request, 'Start date should be less than end date.')
             return redirect('sales_report')
         
-        orders = Order.objects.all()
+        orders = Order.objects.filter(status='Delivered')  # Filter only delivered orders
         if start_date and end_date:
             start_date = datetime.strptime(start_date, '%Y-%m-%d').date()
             end_date = datetime.strptime(end_date, '%Y-%m-%d').date()
@@ -1559,6 +1559,10 @@ def sales_report(request):
             # Define table data
             table_data = [["Customer Name", "Product Title", "Order Date", "Order Status", "Payment Status", "Amount"]]
             total_amount = 0
+            total_cash_on_delivery = 0  # New variable for Cash On Delivery total
+            total_razorpay = 0  # New variable for Razorpay total
+            total_wallet = 0  # New variable for Wallet total
+
             for order in orders:
                 row_data = [
                     order.address.user.uname,
@@ -1571,9 +1575,22 @@ def sales_report(request):
                 table_data.append(row_data)
                 total_amount += order.amount
 
+                # Calculate total amount for specific payment types
+                if order.ordertype == 'Cash on delivery':
+                    total_cash_on_delivery += order.amount
+                elif order.ordertype == 'Razorpay':
+                    total_razorpay += order.amount
+                elif order.ordertype == 'Wallet':
+                    total_wallet += order.amount
+
             # Add total sale row
             total_row = ["", "", "", "", "Total Sale", total_amount]
             table_data.append(total_row)
+
+            # Add specific payment type totals
+            table_data.append(["", "", "", "Total Cash On Delivery", "", total_cash_on_delivery])
+            table_data.append(["", "", "", "Total Razorpay", "", total_razorpay])
+            table_data.append(["", "", "", "Total Wallet", "", total_wallet])
 
             # Define table style
             table_style = [
@@ -1613,9 +1630,20 @@ def sales_report(request):
             # Calculate total amount
             total_amount = orders_df['Amount'].sum()
 
+            # Calculate total amount for specific payment types
+            total_cash_on_delivery = orders_df.loc[orders_df['Order Type'] == 'Cash on delivery', 'Amount'].sum()
+            total_razorpay = orders_df.loc[orders_df['Order Type'] == 'Razorpay', 'Amount'].sum()
+            total_wallet = orders_df.loc[orders_df['Order Type'] == 'Wallet', 'Amount'].sum()
+
             # Add total sale row
             total_row = {"Product ID": "", "Amount": "", "Order Date": "", "Order Type": "Total Sale", "Status": total_amount}
             orders_df = pd.concat([orders_df, pd.DataFrame([total_row])], ignore_index=True)
+
+            # Add specific payment type totals
+            total_cash_on_delivery_row = {"Product ID": "", "Amount": "", "Order Date": "", "Order Type": "Total Cash on delivery", "Status": total_cash_on_delivery}
+            total_razorpay_row = {"Product ID": "", "Amount": "", "Order Date": "", "Order Type": "Total Razorpay", "Status": total_razorpay}
+            total_wallet_row = {"Product ID": "", "Amount": "", "Order Date": "", "Order Type": "Total Wallet", "Status": total_wallet}
+            orders_df = pd.concat([orders_df, pd.DataFrame([total_cash_on_delivery_row, total_razorpay_row, total_wallet_row])], ignore_index=True)
 
             # Create Excel file response
             response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')

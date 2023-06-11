@@ -5,7 +5,7 @@ from .views import OrderUpdateView
 from django.conf import settings
 from django.conf.urls.static import static
 from django.urls import path
-from . import views
+from . import views 
 from .views import  OrderUpdateView, EditUserProfileView, ChangePasswordView
 from .views import VariantView, AddVariantView, EditVariantView, DeleteVariantView
 urlpatterns = [
@@ -72,7 +72,7 @@ urlpatterns = [
     path('deletecoupon/', views.deletecoupon, name='deletecoupon'),
     path('updatecoupon/', views.updatecoupon, name='updatecoupon'),
     path('paypal/', views.paypal, name='paypal'),
-    path('razorpay/', views.razorpay, name='razorpay'),
+    path('razorpay/', views.razo, name='razorpay'),
     path('sales_report/', views.sales_report, name='sales_report'),
     path('generateinvoice/', views.generateinvoice, name='generateinvoice'),
     path('updatebanner/', views.updatebanner, name='updatebanner'),

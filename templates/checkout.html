@@ -236,7 +236,7 @@
             },
             "handler": function(response) {
               // Redirect the user to another page after payment success
-              window.location.href = "{% url 'orderconfirm' %}";
+              window.location.href = "{% url 'razorpay' %}";
             }
           };
           var rzp1 = new Razorpay(options);

@@ -204,10 +204,7 @@ class Order(models.Model):
 
     def __str__(self):
         return str(self.id)
-    # def save(self, *args, **kwargs):
-    #     # Calculate the discounted amount based on the variant price and quantity
-    #     self.amount = self.variant.price_after_offer * self.quantity
-    #     super().save(*args, **kwargs)  
+ 
          
 class Wishlist(models.Model):
     user = models.ForeignKey(UserDetail, on_delete=models.CASCADE,default=None)
