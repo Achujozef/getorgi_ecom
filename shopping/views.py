@@ -1448,7 +1448,7 @@ def razo(request):
                 variant = c.variant
                 variant.stock -= c.quantity
                 variant.save()
-                Order(user=user, address=use2, product=c.product, amount=c.get_total_price,variant=c.variant, ordertype= 'Wallet').save()
+                Order(user=use1, address=use2, product=c.product, amount=c.get_total_price,variant=c.variant, ordertype= 'Razorpay').save()
                 c.delete()
             return render(request,'orderconfirm.html')
         else:
